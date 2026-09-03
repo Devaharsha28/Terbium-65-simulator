@@ -5,7 +5,6 @@ using DLS.Game;
 using DLS.SaveSystem;
 using DLS.Simulation;
 using Seb.Helpers;
-using Seb.Types;
 using Seb.Vis;
 using Seb.Vis.UI;
 using UnityEngine;
@@ -15,19 +14,15 @@ namespace DLS.Graphics
 	// Layout constants - consistent spacing system
 	static class Layout
 	{
-		public const float HeaderHeight = 4.0f;     // Top toolbar with breathing room
-		public const float FooterHeight = 2.0f;     // Status footer
-		public const float SidebarWidth = 15.0f;    // Fixed left navigation pane width
-		public const float ContentMarginX = 3.0f;   // Horizontal margin between sidebar and workspace
-		public const float ContentMarginY = 2.8f;   // Vertical margin from header to workspace
-		public const float SectionSpacing = 2.8f;   // Spacing between major content sections
-		public const float ElementSpacing = 1.4f;   // Spacing between related elements
-		public const float CardHeight = 5.0f;       // Primary action card height
-		public const float CardSpacing = 1.6f;      // Spacing between action cards
-		public const float ProjectRowHeight = 2.5f; // Recent project row height
-		public const float ProjectRowSpacing = 0.4f; // Spacing between recent project rows
-		public const float NavButtonHeight = 2.2f;  // Sidebar navigation button height
-		public const float NavButtonSpacing = 0.4f; // Spacing between sidebar buttons
+		public const float HeaderHeight = 3.5f;     // Compact header
+		public const float FooterHeight = 2f;       // Slim footer
+		public const float SidebarWidth = 11f;      // Fixed sidebar width
+		public const float SidebarPadding = 1f;     // Internal sidebar padding
+		public const float ContentPadding = 1.8f;   // Main content padding
+		public const float ItemSpacing = 0.6f;      // Between nav items
+		public const float SectionSpacing = 1.5f;   // Between sections
+		public const float ProjectRowHeight = 1.6f; // Project list row height
+		public const float ActionCardHeight = 2.5f; // Action card height
 	}
 
 	public static class MainMenu
@@ -52,6 +47,15 @@ namespace DLS.Graphics
 		static readonly UI.ScrollViewDrawContentFunc loadProjectScrollViewDrawer = DrawAllProjectsInScrollView;
 
 		// Sidebar navigation buttons
+		static readonly string[] sidebarButtonNames =
+		{
+			"New Project",
+			"Open Project",
+			"Settings",
+			"About",
+			"Quit"
+		};
+
 		static readonly string[] openProjectButtonNames =
 		{
 			FormatButtonString("Back"),
@@ -83,32 +87,10 @@ namespace DLS.Graphics
 		static int selectedProjectIndex;
 
 		static readonly string authorString = "Terbium 65 • Ternary Logic Design Environment";
-		static readonly string versionString = "v0.1.0";
+		static readonly string versionString = "v0.1";
 		static string SelectedProjectName => allProjectDescriptions[selectedProjectIndex].ProjectName;
 
 		static string FormatButtonString(string s) => capitalize ? s.ToUpper() : s;
-
-		// Material Dark Flat White palette
-		static class Palette
-		{
-			public static readonly Color Background = ColHelper.MakeCol("#121212");
-			public static readonly Color Surface = ColHelper.MakeCol("#1E1E1E");
-			public static readonly Color SurfaceElevated = ColHelper.MakeCol("#2C2C2C");
-			public static readonly Color Border = ColHelper.MakeCol("#333333");
-			public static readonly Color TextPrimary = ColHelper.MakeCol("#FFFFFF");
-			public static readonly Color TextSecondary = ColHelper.MakeCol("#A0A0A0");
-			public static readonly Color TextDisabled = ColHelper.MakeCol("#666666");
-			public static readonly Color Accent = ColHelper.MakeCol("#FFFFFF");
-		}
-
-		static ButtonTheme GetNavButtonTheme(DrawSettings.UIThemeDLS theme, bool isSelected = false) => new()
-		{
-			font = theme.FontRegular,
-			fontSize = theme.FontSizeRegular * 0.9f,
-			textCols = new ButtonTheme.StateCols(isSelected ? Palette.TextPrimary : Palette.TextSecondary, Palette.TextPrimary, Palette.TextPrimary, Palette.TextDisabled),
-			buttonCols = new ButtonTheme.StateCols(isSelected ? Palette.SurfaceElevated : Color.clear, Palette.SurfaceElevated, Palette.Border, Color.clear),
-			paddingScale = Vector2.zero
-		};
 
 		public static void Draw()
 		{
@@ -119,9 +101,7 @@ namespace DLS.Graphics
 				BackToMain();
 			}
 
-			// Main application background (#101112)
-			UI.DrawFullscreenPanel(Palette.Background);
-
+			UI.DrawFullscreenPanel(ColHelper.MakeCol("#101214"));
 			DrawHeader();
 			DrawFooter();
 
@@ -151,7 +131,11 @@ namespace DLS.Graphics
 					DrawDeleteProjectConfirmationPopup();
 					break;
 				case PopupKind.NamePopup_RenameProject:
+					DrawNamePopup();
+					break;
 				case PopupKind.NamePopup_DuplicateProject:
+					DrawNamePopup();
+					break;
 				case PopupKind.NamePopup_NewProject:
 					DrawNamePopup();
 					break;
@@ -172,7 +156,7 @@ namespace DLS.Graphics
 			DrawSettings.UIThemeDLS theme = DrawSettings.ActiveUITheme;
 			RefreshLoadedProjects();
 
-			// Draw docked sidebar
+			// Draw sidebar
 			DrawSidebar(theme);
 
 			// Draw main workspace
@@ -181,75 +165,56 @@ namespace DLS.Graphics
 
 		static void DrawSidebar(DrawSettings.UIThemeDLS theme)
 		{
-			float sidebarHeight = UI.Height - Layout.HeaderHeight - Layout.FooterHeight;
+			float sidebarCenterX = Layout.SidebarWidth / 2 + Layout.MainContentPadding;
+			float sidebarTopY = UI.Height - Layout.HeaderHeight - Layout.MainContentPadding;
+			float sidebarHeight = UI.Height - Layout.HeaderHeight - Layout.FooterHeight - Layout.MainContentPadding * 2;
 
-			// Sidebar background pane (#18191A)
-			UI.DrawPanel(new Vector2(0, Layout.FooterHeight),
+			// Sidebar background panel
+			UI.DrawPanel(new Vector2(sidebarCenterX, sidebarTopY - sidebarHeight / 2),
 				new Vector2(Layout.SidebarWidth, sidebarHeight),
-				Palette.Surface, Anchor.BottomLeft);
+				ColHelper.MakeCol("#1D2024"), Anchor.Centre);
 
-			// Vertical separator line (#2B2C2D)
-			UI.DrawLine(new Vector2(Layout.SidebarWidth, Layout.FooterHeight),
-				new Vector2(Layout.SidebarWidth, UI.Height - Layout.HeaderHeight),
-				0.08f, Palette.Border);
+			// PROJECT section
+			float currentY = sidebarTopY - 1.2f;
+			UI.DrawText("PROJECT", theme.FontRegular, theme.FontSizeRegular * 0.75f,
+				new Vector2(Layout.MainContentPadding + 0.5f, currentY), Anchor.TopLeft,
+				new Color(1, 1, 1, 0.5f));
 
-			float navWidth = Layout.SidebarWidth - 2.4f;
-			float navX = 1.2f;
-			float currentY = UI.Height - Layout.HeaderHeight - 2.0f;
-
-			// PROJECT section label
-			UI.DrawText("PROJECT", theme.FontRegular, theme.FontSizeRegular * 0.68f,
-				new Vector2(1.8f, currentY), Anchor.TopLeft,
-				Palette.TextDisabled);
-
-			currentY -= 1.4f;
-
-			// New Project nav button
-			ButtonTheme newBtnTheme = GetNavButtonTheme(theme, true);
-			bool newClicked = UI.Button("New Project", newBtnTheme,
-				new Vector2(navX, currentY),
-				new Vector2(navWidth, Layout.NavButtonHeight),
-				true, false, false, Anchor.TopLeft, true, 1.0f);
-
+			// New Project button
+			currentY -= 1.5f;
+			bool newClicked = UI.Button("New Project", theme.MenuButtonTheme,
+				new Vector2(sidebarCenterX, currentY),
+				new Vector2(Layout.SidebarWidth - 0.4f, Layout.RowHeight),
+				true, false, true, Anchor.Centre);
 			if (newClicked || KeyboardShortcuts.MainMenu_NewProjectShortcutTriggered)
 			{
 				activePopup = PopupKind.NamePopup_NewProject;
 			}
 
-			currentY -= Layout.NavButtonHeight + Layout.NavButtonSpacing;
-
-			// Open Project nav button
-			ButtonTheme openBtnTheme = GetNavButtonTheme(theme, false);
-			bool openClicked = UI.Button("Open Project", openBtnTheme,
-				new Vector2(navX, currentY),
-				new Vector2(navWidth, Layout.NavButtonHeight),
-				true, false, false, Anchor.TopLeft, true, 1.0f);
+			// Open Project button
+			currentY -= Layout.RowHeight + Layout.RowSpacing;
+			bool openClicked = UI.Button("Open Project", theme.MenuButtonTheme,
+				new Vector2(sidebarCenterX, currentY),
+				new Vector2(Layout.SidebarWidth - 0.4f, Layout.RowHeight),
+				true, false, true, Anchor.Centre);
 			if (openClicked || KeyboardShortcuts.MainMenu_OpenProjectShortcutTriggered)
 			{
 				selectedProjectIndex = -1;
 				activeMenuScreen = MenuScreen.LoadProject;
 			}
 
-			currentY -= Layout.NavButtonHeight + 1.6f;
-
-			// Horizontal divider line
-			UI.DrawLine(new Vector2(1.8f, currentY), new Vector2(Layout.SidebarWidth - 1.8f, currentY), 0.05f, Palette.Border);
-
-			currentY -= 1.6f;
-
-			// APPLICATION section label
-			UI.DrawText("APPLICATION", theme.FontRegular, theme.FontSizeRegular * 0.68f,
-				new Vector2(1.8f, currentY), Anchor.TopLeft,
-				Palette.TextDisabled);
-
-			currentY -= 1.4f;
+			// APPLICATION section
+			currentY -= Layout.RowHeight + Layout.SectionSpacing;
+			UI.DrawText("APPLICATION", theme.FontRegular, theme.FontSizeRegular * 0.75f,
+				new Vector2(Layout.MainContentPadding + 0.5f, currentY), Anchor.TopLeft,
+				new Color(1, 1, 1, 0.5f));
 
 			// Settings button
-			ButtonTheme settingsBtnTheme = GetNavButtonTheme(theme, false);
-			bool settingsClicked = UI.Button("Settings", settingsBtnTheme,
-				new Vector2(navX, currentY),
-				new Vector2(navWidth, Layout.NavButtonHeight),
-				true, false, false, Anchor.TopLeft, true, 1.0f);
+			currentY -= 1.5f;
+			bool settingsClicked = UI.Button("Settings", theme.MenuButtonTheme,
+				new Vector2(sidebarCenterX, currentY),
+				new Vector2(Layout.SidebarWidth - 0.4f, Layout.RowHeight),
+				true, false, true, Anchor.Centre);
 			if (settingsClicked || KeyboardShortcuts.MainMenu_SettingsShortcutTriggered)
 			{
 				EditedAppSettings = Main.ActiveAppSettings;
@@ -257,30 +222,23 @@ namespace DLS.Graphics
 				OnSettingsMenuOpened();
 			}
 
-			currentY -= Layout.NavButtonHeight + Layout.NavButtonSpacing;
-
 			// About button
-			ButtonTheme aboutBtnTheme = GetNavButtonTheme(theme, false);
-			bool aboutClicked = UI.Button("About", aboutBtnTheme,
-				new Vector2(navX, currentY),
-				new Vector2(navWidth, Layout.NavButtonHeight),
-				true, false, false, Anchor.TopLeft, true, 1.0f);
+			currentY -= Layout.RowHeight + Layout.RowSpacing;
+			bool aboutClicked = UI.Button("About", theme.MenuButtonTheme,
+				new Vector2(sidebarCenterX, currentY),
+				new Vector2(Layout.SidebarWidth - 0.4f, Layout.RowHeight),
+				true, false, true, Anchor.Centre);
 			if (aboutClicked)
 			{
 				activeMenuScreen = MenuScreen.About;
 			}
 
-			// Divider above Quit button
-			float quitDividerY = Layout.FooterHeight + 1.8f + Layout.NavButtonHeight;
-			UI.DrawLine(new Vector2(1.8f, quitDividerY), new Vector2(Layout.SidebarWidth - 1.8f, quitDividerY), 0.05f, Palette.Border);
-
-			// Quit button at bottom of sidebar
-			float quitY = Layout.FooterHeight + 1.0f + Layout.NavButtonHeight;
-			ButtonTheme quitBtnTheme = GetNavButtonTheme(theme, false);
-			bool quitClicked = UI.Button("Quit", quitBtnTheme,
-				new Vector2(navX, quitY),
-				new Vector2(navWidth, Layout.NavButtonHeight),
-				true, false, false, Anchor.TopLeft, true, 1.0f);
+			// Quit button at bottom
+			float quitY = Layout.FooterHeight + 0.8f + Layout.RowHeight / 2;
+			bool quitClicked = UI.Button("Quit", theme.MenuButtonTheme,
+				new Vector2(sidebarCenterX, quitY),
+				new Vector2(Layout.SidebarWidth - 0.4f, Layout.RowHeight),
+				true, false, true, Anchor.Centre);
 			if (quitClicked || KeyboardShortcuts.MainMenu_QuitShortcutTriggered)
 			{
 				Quit();
@@ -289,40 +247,34 @@ namespace DLS.Graphics
 
 		static void DrawMainWorkspace(DrawSettings.UIThemeDLS theme)
 		{
-			float workspaceLeft = Layout.SidebarWidth + Layout.ContentMarginX;
-			float workspaceRight = UI.Width - Layout.ContentMarginX;
-			float workspaceTop = UI.Height - Layout.HeaderHeight - Layout.ContentMarginY;
+			float workspaceLeft = Layout.SidebarWidth + Layout.MainContentPadding * 2 + 0.5f;
+			float workspaceRight = UI.Width - Layout.MainContentPadding;
+			float workspaceTop = UI.Height - Layout.HeaderHeight - Layout.MainContentPadding;
 			float workspaceWidth = workspaceRight - workspaceLeft;
 
 			Vector2 contentPos = new(workspaceLeft, workspaceTop);
 
 			// Welcome heading
-			UI.DrawText("Welcome to Terbium 65", theme.FontBold, theme.FontSizeRegular * 1.25f,
-				contentPos, Anchor.TopLeft, Palette.TextPrimary);
+			UI.DrawText("Welcome to Terbium 65", theme.FontBold, theme.FontSizeRegular + 0.4f,
+				contentPos, Anchor.TopLeft, Color.white);
 
-			// Subtitle description (restore breathing room)
-			contentPos.y -= 1.8f;
-			UI.DrawText("Design and simulate ternary logic circuits.", theme.FontRegular, theme.FontSizeRegular * 0.88f,
-				contentPos, Anchor.TopLeft, Palette.TextSecondary);
+			// Description
+			contentPos += Vector2.down * 2.2f;
+			UI.DrawText("Design and simulate ternary logic circuits.", theme.FontRegular, theme.FontSizeRegular * 0.9f,
+				contentPos, Anchor.TopLeft, new Color(1, 1, 1, 0.7f));
 
-			// Section: QUICK START
-			contentPos.y -= 3.0f;
-			UI.DrawText("QUICK START", theme.FontRegular, theme.FontSizeRegular * 0.68f,
-				contentPos, Anchor.TopLeft, Palette.TextDisabled);
+			// Primary actions section
+			contentPos += Vector2.down * 3.5f;
 
-			contentPos.y -= 1.2f;
-
-			// Two-column layout for action cards with a maximum width so they don't stretch infinitely
-			float maxContentWidth = 55.0f;
-			float effectiveWidth = Mathf.Min(workspaceWidth, maxContentWidth);
-			float cardWidth = (effectiveWidth - Layout.CardSpacing) / 2f;
+			// Two-column layout for action cards
+			float cardWidth = (workspaceWidth - Layout.CardSpacing) / 2 - 0.2f;
 			float cardLeft = workspaceLeft;
 			float cardRight = cardLeft + cardWidth + Layout.CardSpacing;
 
 			// New Project card
 			bool newCardClicked = DrawActionCard(theme, new Vector2(cardLeft, contentPos.y), 
 				new Vector2(cardWidth, Layout.CardHeight),
-				"New Project", "Create a new ternary circuit design.");
+				"New Project", "Create a new ternary\ncircuit design");
 			if (newCardClicked)
 			{
 				activePopup = PopupKind.NamePopup_NewProject;
@@ -331,122 +283,61 @@ namespace DLS.Graphics
 			// Open Project card
 			bool openCardClicked = DrawActionCard(theme, new Vector2(cardRight, contentPos.y),
 				new Vector2(cardWidth, Layout.CardHeight),
-				"Open Project", "Open an existing project.");
+				"Open Project", "Open an existing\nproject");
 			if (openCardClicked)
 			{
 				selectedProjectIndex = -1;
 				activeMenuScreen = MenuScreen.LoadProject;
 			}
 
-			// Section: RECENT PROJECTS
-			contentPos.y -= Layout.CardHeight + 2.2f;
-			UI.DrawText("RECENT PROJECTS", theme.FontRegular, theme.FontSizeRegular * 0.68f,
-				contentPos, Anchor.TopLeft, Palette.TextDisabled);
+			// Recent projects section
+			contentPos += Vector2.down * (Layout.CardHeight + 1.5f);
+			UI.DrawText("RECENT PROJECTS", theme.FontRegular, theme.FontSizeRegular * 0.8f,
+				contentPos, Anchor.TopLeft, new Color(1, 1, 1, 0.6f));
 
-			contentPos.y -= 1.0f;
+			contentPos += Vector2.down * 1.8f;
 
-			if (allProjectDescriptions == null || allProjectDescriptions.Length == 0)
+			if (allProjectDescriptions.Length == 0)
 			{
-				UI.DrawText("No recent projects.", theme.FontRegular, theme.FontSizeRegular * 0.88f,
-					contentPos, Anchor.TopLeft, Palette.TextDisabled);
+				UI.DrawText("No recent projects.", theme.FontRegular, theme.FontSizeRegular * 0.85f,
+					contentPos, Anchor.TopLeft, new Color(1, 1, 1, 0.4f));
 			}
 			else
 			{
-				float rowY = contentPos.y;
-				float minBottom = Layout.FooterHeight + 1.2f;
-				int maxVisibleRows = Mathf.Max(1, Mathf.FloorToInt((rowY - minBottom) / (Layout.ProjectRowHeight + Layout.ProjectRowSpacing)));
-				int count = Mathf.Min(allProjectDescriptions.Length, maxVisibleRows);
-
-				for (int i = 0; i < count; i++)
-				{
-					ProjectDescription desc = allProjectDescriptions[i];
-					Vector2 rowPos = new(workspaceLeft, rowY);
-					Vector2 rowSize = new(effectiveWidth, Layout.ProjectRowHeight);
-
-					bool rowClicked = DrawProjectRow(theme, rowPos, rowSize, desc.ProjectName);
-					if (rowClicked)
-					{
-						Main.CreateOrLoadProject(desc.ProjectName, string.Empty);
-					}
-
-					rowY -= Layout.ProjectRowHeight + Layout.ProjectRowSpacing;
-				}
+				Vector2 projectsScrollSize = new(workspaceWidth - 0.4f, 10f);
+				UI.DrawScrollView(ID_ProjectsScrollView, contentPos, projectsScrollSize, 
+					Anchor.TopLeft, theme.ScrollTheme, DrawAllProjectsInScrollView);
 			}
 		}
 
-		static bool DrawActionCard(DrawSettings.UIThemeDLS theme, Vector2 pos, Vector2 size, string title, string description)
+		static bool DrawActionCard(DrawSettings.UIThemeDLS theme, Vector2 pos, Vector2 size,
+			string title, string description)
 		{
-			ButtonTheme cardBtnTheme = new()
-			{
-				font = theme.FontRegular,
-				fontSize = theme.FontSizeRegular,
-				textCols = new ButtonTheme.StateCols(Color.clear, Color.clear, Color.clear, Color.clear),
-				buttonCols = new ButtonTheme.StateCols(Palette.Surface, Palette.SurfaceElevated, Palette.SurfaceElevated, Palette.Surface),
-				paddingScale = Vector2.zero
-			};
+			Color cardBg = ColHelper.MakeCol("#1D2024");
+			Color cardBorder = ColHelper.MakeCol("#292D32");
 
-			Bounds2D cardBounds = Bounds2D.CreateFromTopLeftAndSize(pos, size);
-			bool mouseOver = UI.MouseInsideBounds(cardBounds);
+			// Card background
+			UI.DrawPanel(pos + new Vector2(size.x / 2, size.y / 2), size, cardBg, Anchor.Centre);
 
-			Color bgCol = mouseOver ? Palette.SurfaceElevated : Palette.Surface;
-			Color borderCol = mouseOver ? Palette.Accent : Palette.Border;
-
-			// Card background panel
-			UI.DrawPanel(pos, size, bgCol, Anchor.TopLeft);
-
-			// Bottom border only (minimal flat style)
-			Vector2 bottomLeft = pos + new Vector2(0, -size.y);
-			Vector2 bottomRight = pos + new Vector2(size.x, -size.y);
-			UI.DrawLine(bottomLeft, bottomRight, 0.06f, borderCol);
+			// Card border
+			UI.DrawPanel(pos, size, cardBorder, Anchor.TopLeft);
 
 			// Title
-			Vector2 titlePos = pos + new Vector2(1.2f, -1.2f);
+			Vector2 titlePos = pos + new Vector2(0.6f, 0.5f);
 			UI.DrawText(title, theme.FontBold, theme.FontSizeRegular * 0.95f,
-				titlePos, Anchor.TopLeft, mouseOver ? Palette.TextPrimary : Palette.TextPrimary);
+				titlePos, Anchor.TopLeft, Color.white);
 
 			// Description
-			Vector2 descPos = pos + new Vector2(1.2f, -2.8f);
-			UI.DrawText(description, theme.FontRegular, theme.FontSizeRegular * 0.78f,
-				descPos, Anchor.TopLeft, Palette.TextSecondary);
+			Vector2 descPos = pos + new Vector2(0.6f, 1.8f);
+			UI.DrawText(description, theme.FontRegular, theme.FontSizeRegular * 0.75f,
+				descPos, Anchor.TopLeft, new Color(1, 1, 1, 0.65f));
 
-			// Click handler
-			return UI.Button("", cardBtnTheme, pos, size, true, false, false, Anchor.TopLeft);
+			// Click detection
+			return UI.Button("", theme.MenuButtonTheme, pos + new Vector2(size.x / 2, size.y / 2),
+				size, true, false, false, Anchor.Centre);
 		}
 
-		static bool DrawProjectRow(DrawSettings.UIThemeDLS theme, Vector2 pos, Vector2 size, string projectName)
-		{
-			ButtonTheme rowBtnTheme = new()
-			{
-				font = theme.FontRegular,
-				fontSize = theme.FontSizeRegular,
-				textCols = new ButtonTheme.StateCols(Color.clear, Color.clear, Color.clear, Color.clear),
-				buttonCols = new ButtonTheme.StateCols(Color.clear, Palette.SurfaceElevated, Palette.SurfaceElevated, Color.clear),
-				paddingScale = Vector2.zero
-			};
-
-			Bounds2D rowBounds = Bounds2D.CreateFromTopLeftAndSize(pos, size);
-			bool mouseOver = UI.MouseInsideBounds(rowBounds);
-
-			// Subtle hover background only
-			if (mouseOver)
-			{
-				UI.DrawPanel(pos, size, Palette.SurfaceElevated, Anchor.TopLeft);
-			}
-
-			// Bottom divider line only (minimal)
-			Vector2 bottomLeft = pos + new Vector2(0, -size.y);
-			Vector2 bottomRight = pos + new Vector2(size.x, -size.y);
-			UI.DrawLine(bottomLeft, bottomRight, 0.04f, Palette.Border);
-
-			// Project name
-			Vector2 namePos = pos + new Vector2(1.2f, -size.y / 2f);
-			UI.DrawText(projectName, theme.FontRegular, theme.FontSizeRegular * 0.9f,
-				namePos, Anchor.CentreLeft, mouseOver ? Palette.TextPrimary : Palette.TextSecondary);
-
-			return UI.Button("", rowBtnTheme, pos, size, true, false, false, Anchor.TopLeft);
-		}
-
-		static void DrawLoadProjectScreen()
+	static void DrawLoadProjectScreen()
 		{
 			const int backButtonIndex = 0;
 			const int deleteButtonIndex = 1;
@@ -460,20 +351,20 @@ namespace DLS.Graphics
 			DrawSidebarWithBack(theme);
 
 			// Main workspace
-			float workspaceLeft = Layout.SidebarWidth + Layout.ContentMarginX;
-			float workspaceRight = UI.Width - Layout.ContentMarginX;
-			float workspaceTop = UI.Height - Layout.HeaderHeight - Layout.ContentMarginY;
+			float workspaceLeft = Layout.SidebarWidth + Layout.MainContentPadding * 2 + 0.5f;
+			float workspaceRight = UI.Width - Layout.MainContentPadding;
+			float workspaceTop = UI.Height - Layout.HeaderHeight - Layout.MainContentPadding;
 			float workspaceWidth = workspaceRight - workspaceLeft;
 
 			Vector2 contentPos = new(workspaceLeft, workspaceTop);
 
 			// Title
-			UI.DrawText("Open Project", theme.FontBold, theme.FontSizeRegular * 1.15f,
-				contentPos, Anchor.TopLeft, ColHelper.MakeCol("#E2E5E8"));
+			UI.DrawText("Open Project", theme.FontBold, theme.FontSizeRegular + 0.4f,
+				contentPos, Anchor.TopLeft, Color.white);
 
 			// Projects list
-			contentPos.y -= 2.0f;
-			Vector2 projectsScrollSize = new(workspaceWidth, 14f);
+			contentPos += Vector2.down * 2.5f;
+			Vector2 projectsScrollSize = new(workspaceWidth - 0.4f, 14f);
 			UI.DrawScrollView(ID_ProjectsScrollView, contentPos, projectsScrollSize,
 				Anchor.TopLeft, theme.ScrollTheme, loadProjectScrollViewDrawer);
 
@@ -509,27 +400,21 @@ namespace DLS.Graphics
 
 		static void DrawSidebarWithBack(DrawSettings.UIThemeDLS theme)
 		{
-			float sidebarHeight = UI.Height - Layout.HeaderHeight - Layout.FooterHeight;
+			float sidebarCenterX = Layout.SidebarWidth / 2 + Layout.MainContentPadding;
+			float sidebarTopY = UI.Height - Layout.HeaderHeight - Layout.MainContentPadding;
+			float sidebarHeight = UI.Height - Layout.HeaderHeight - Layout.FooterHeight - Layout.MainContentPadding * 2;
 
-			// Full docked sidebar
-			UI.DrawPanel(new Vector2(0, Layout.FooterHeight),
+			// Sidebar background
+			UI.DrawPanel(new Vector2(sidebarCenterX, sidebarTopY - sidebarHeight / 2),
 				new Vector2(Layout.SidebarWidth, sidebarHeight),
-				ColHelper.MakeCol("#17191C"), Anchor.BottomLeft);
+				ColHelper.MakeCol("#1D2024"), Anchor.Centre);
 
-			// Right Divider
-			UI.DrawLine(new Vector2(Layout.SidebarWidth, Layout.FooterHeight),
-				new Vector2(Layout.SidebarWidth, UI.Height - Layout.HeaderHeight),
-				0.08f, ColHelper.MakeCol("#292D32"));
-
-			ButtonTheme navTheme = GetNavButtonTheme(theme);
-			float currentY = UI.Height - Layout.HeaderHeight - 1.8f;
-			float navWidth = Layout.SidebarWidth - 1.6f;
-			float navX = 0.8f;
-
-			bool backClicked = UI.Button("← Back", navTheme,
-				new Vector2(navX, currentY),
-				new Vector2(navWidth, Layout.NavButtonHeight),
-				true, false, false, Anchor.TopLeft, true, 0.8f);
+			// Back button at top
+			float currentY = sidebarTopY - 1.2f;
+			bool backClicked = UI.Button("Back", theme.MenuButtonTheme,
+				new Vector2(sidebarCenterX, currentY),
+				new Vector2(Layout.SidebarWidth - 0.4f, Layout.RowHeight),
+				true, false, true, Anchor.Centre);
 			if (backClicked)
 			{
 				BackToMain();
@@ -540,7 +425,7 @@ namespace DLS.Graphics
 
 		static void DrawAllProjectsInScrollView(Vector2 topLeft, float width, bool isLayoutPass)
 		{
-			float spacing = 0.3f;
+			float spacing = 0;
 			bool enabled = activePopup == PopupKind.None;
 
 			for (int i = 0; i < allProjectDescriptions.Length; i++)
@@ -550,7 +435,7 @@ namespace DLS.Graphics
 				ButtonTheme buttonTheme = selected ? DrawSettings.ActiveUITheme.ProjectSelectionButtonSelected : DrawSettings.ActiveUITheme.ProjectSelectionButton;
 				if (!projectCompatibilities[i].compatible) buttonTheme.textCols.normal.a = 0.5f;
 
-				if (UI.Button(desc.ProjectName, buttonTheme, topLeft, new Vector2(width, Layout.ProjectRowHeight), enabled, false, false, Anchor.TopLeft, true, 0.8f))
+				if (UI.Button(desc.ProjectName, buttonTheme, topLeft, new Vector2(width, 0), enabled, false, true, Anchor.TopLeft))
 				{
 					selectedProjectIndex = i;
 				}
@@ -558,6 +443,7 @@ namespace DLS.Graphics
 				topLeft = UI.PrevBounds.BottomLeft + Vector2.down * spacing;
 			}
 		}
+
 
 		static void RefreshLoadedProjects()
 		{
@@ -592,6 +478,7 @@ namespace DLS.Graphics
 			activePopup = PopupKind.None;
 		}
 
+
 		static void OnSettingsMenuOpened()
 		{
 			// Automatically select whichever resolution option is closest to current window size
@@ -619,7 +506,7 @@ namespace DLS.Graphics
 			}
 		}
 
-		static void DrawSettingsScreen()
+	static void DrawSettingsScreen()
 		{
 			DrawSettings.UIThemeDLS theme = DrawSettings.ActiveUITheme;
 
@@ -627,29 +514,31 @@ namespace DLS.Graphics
 			DrawSidebarWithBack(theme);
 
 			// Main workspace
-			float workspaceLeft = Layout.SidebarWidth + Layout.ContentMarginX;
-			float workspaceRight = UI.Width - Layout.ContentMarginX;
-			float workspaceTop = UI.Height - Layout.HeaderHeight - Layout.ContentMarginY;
+			float workspaceLeft = Layout.SidebarWidth + Layout.MainContentPadding * 2 + 0.5f;
+			float workspaceRight = UI.Width - Layout.MainContentPadding;
+			float workspaceTop = UI.Height - Layout.HeaderHeight - Layout.MainContentPadding;
+			float workspaceWidth = workspaceRight - workspaceLeft;
 
 			Vector2 contentPos = new(workspaceLeft, workspaceTop);
 
 			// Title
-			UI.DrawText("Settings", theme.FontBold, theme.FontSizeRegular * 1.15f,
-				contentPos, Anchor.TopLeft, ColHelper.MakeCol("#E2E5E8"));
+			UI.DrawText("Settings", theme.FontBold, theme.FontSizeRegular + 0.4f,
+				contentPos, Anchor.TopLeft, Color.white);
 
-			contentPos.y -= 2.6f;
+			contentPos += Vector2.down * 2.8f;
 
 			using (UI.BeginBoundsScope(true))
 			{
 				Draw.ID panelID = UI.ReservePanel();
 
+				float labelLeft = contentPos.x;
 				float controlRight = workspaceRight - 0.5f;
 				Vector2 wheelSize = new(12f, 2.1f);
 				Vector2 pos = contentPos;
 
 				// Resolution
 				bool resEnabled = EditedAppSettings.fullscreenMode == FullScreenMode.Windowed;
-				UI.DrawText("Resolution", theme.FontRegular, theme.FontSizeRegular * 0.9f, pos, Anchor.TopLeft, ColHelper.MakeCol("#E2E5E8"));
+				UI.DrawText("Resolution", theme.FontRegular, theme.FontSizeRegular * 0.9f, pos, Anchor.TopLeft, Color.white);
 				string[] resNames = resEnabled ? ResolutionNames : FullScreenResName;
 				int resIndex = UI.WheelSelector(ID_DisplayResolutionWheel, resNames, 
 					new Vector2(controlRight, pos.y + 1f), wheelSize, theme.OptionsWheel, Anchor.CentreRight, enabled: resEnabled);
@@ -658,21 +547,21 @@ namespace DLS.Graphics
 
 				// Fullscreen
 				pos += Vector2.down * 3.2f;
-				UI.DrawText("Fullscreen", theme.FontRegular, theme.FontSizeRegular * 0.9f, pos, Anchor.TopLeft, ColHelper.MakeCol("#E2E5E8"));
+				UI.DrawText("Fullscreen", theme.FontRegular, theme.FontSizeRegular * 0.9f, pos, Anchor.TopLeft, Color.white);
 				int fullScreenSettingIndex = UI.WheelSelector(ID_FullscreenWheel, SettingsWheelFullScreenOptions,
 					new Vector2(controlRight, pos.y + 1f), wheelSize, theme.OptionsWheel, Anchor.CentreRight);
 				EditedAppSettings.fullscreenMode = FullScreenModes[fullScreenSettingIndex];
 
 				// VSync
 				pos += Vector2.down * 3.2f;
-				UI.DrawText("VSync", theme.FontRegular, theme.FontSizeRegular * 0.9f, pos, Anchor.TopLeft, ColHelper.MakeCol("#E2E5E8"));
+				UI.DrawText("VSync", theme.FontRegular, theme.FontSizeRegular * 0.9f, pos, Anchor.TopLeft, Color.white);
 				int vsyncSetting = UI.WheelSelector(EditedAppSettings.VSyncEnabled ? 1 : 0, SettingsWheelVSyncOptions,
 					new Vector2(controlRight, pos.y + 1f), wheelSize, theme.OptionsWheel, Anchor.CentreRight);
 				EditedAppSettings.VSyncEnabled = vsyncSetting == 1;
 
 				// Theme
 				pos += Vector2.down * 3.2f;
-				UI.DrawText("Theme", theme.FontRegular, theme.FontSizeRegular * 0.9f, pos, Anchor.TopLeft, ColHelper.MakeCol("#E2E5E8"));
+				UI.DrawText("Theme", theme.FontRegular, theme.FontSizeRegular * 0.9f, pos, Anchor.TopLeft, Color.white);
 				bool editThemeClicked = UI.Button("EDIT THEME", theme.MenuButtonTheme,
 					new Vector2(controlRight - 6.5f, pos.y + 1f), new Vector2(13f, 2f),
 					true, false, true, Anchor.Centre);
@@ -720,6 +609,7 @@ namespace DLS.Graphics
 				Vector2 charSize = UI.CalculateTextSize("M", inputTheme.fontSize, inputTheme.font);
 				Vector2 padding = new(2, 2);
 				Vector2 inputFieldSize = new Vector2(charSize.x * MaxProjectNameLength, charSize.y) + padding * 2;
+
 
 				InputFieldState state = UI.InputField(ID_ProjectNameInput, inputTheme, UI.Centre, inputFieldSize, "", Anchor.Centre, padding.x, projectNameValidator, true);
 
@@ -807,7 +697,7 @@ namespace DLS.Graphics
 			}
 		}
 
-		static void DrawAboutScreen()
+	static void DrawAboutScreen()
 		{
 			DrawSettings.UIThemeDLS theme = DrawSettings.ActiveUITheme;
 
@@ -815,17 +705,18 @@ namespace DLS.Graphics
 			DrawSidebarWithBack(theme);
 
 			// Main workspace
-			float workspaceLeft = Layout.SidebarWidth + Layout.ContentMarginX;
-			float workspaceTop = UI.Height - Layout.HeaderHeight - Layout.ContentMarginY;
+			float workspaceLeft = Layout.SidebarWidth + Layout.MainContentPadding * 2 + 0.5f;
+			float workspaceRight = UI.Width - Layout.MainContentPadding;
+			float workspaceTop = UI.Height - Layout.HeaderHeight - Layout.MainContentPadding;
 
 			Vector2 contentPos = new(workspaceLeft, workspaceTop);
 
 			// Title
-			UI.DrawText("About", theme.FontBold, theme.FontSizeRegular * 1.15f,
-				contentPos, Anchor.TopLeft, ColHelper.MakeCol("#E2E5E8"));
+			UI.DrawText("About", theme.FontBold, theme.FontSizeRegular + 0.4f,
+				contentPos, Anchor.TopLeft, Color.white);
 
 			// About text
-			contentPos += Vector2.down * 2.4f;
+			contentPos += Vector2.down * 2.8f;
 			string aboutText = "Terbium 65 is a digital logic simulation\n" +
 				"environment for designing and experimenting\n" +
 				"with ternary circuits and ternary computer\n" +
@@ -835,64 +726,58 @@ namespace DLS.Graphics
 				"Forked and modified by DevaHarsha28.";
 
 			UI.DrawText(aboutText, theme.FontRegular, theme.FontSizeRegular * 0.9f,
-				contentPos, Anchor.TopLeft, ColHelper.MakeCol("#E2E5E8"));
+				contentPos, Anchor.TopLeft, new Color(1, 1, 1, 0.8f));
 		}
 
 		static void DrawHeader()
 		{
 			DrawSettings.UIThemeDLS theme = DrawSettings.ActiveUITheme;
+			Color headerBg = ColHelper.MakeCol("#17191C");
+			Color headerBorder = ColHelper.MakeCol("#292D32");
 
-			// Header background (#18191A)
-			UI.DrawPanel(new Vector2(0, UI.Height), 
-				new Vector2(UI.Width, Layout.HeaderHeight),
-				Palette.Surface, Anchor.TopLeft);
+			// Header background
+			UI.DrawPanel(new Vector2(UI.Width / 2, UI.Height - Layout.HeaderHeight / 2), 
+				new Vector2(UI.Width, Layout.HeaderHeight), headerBg, Anchor.Centre);
 
-			// Bottom border (#2B2C2D)
-			UI.DrawLine(new Vector2(0, UI.Height - Layout.HeaderHeight),
-				new Vector2(UI.Width, UI.Height - Layout.HeaderHeight),
-				0.08f, Palette.Border);
+			// Bottom border
+			UI.DrawPanel(new Vector2(UI.Width / 2, UI.Height - Layout.HeaderHeight), 
+				new Vector2(UI.Width, 0.06f), headerBorder, Anchor.TopCentre);
 
 			// Left: Title with subtitle
-			float titleLeft = 2.0f;
-			float titleTop = UI.Height - 0.8f;
-			UI.DrawText("TERBIUM 65", theme.FontBold, theme.FontSizeRegular * 1.0f,
-				new Vector2(titleLeft, titleTop), Anchor.TopLeft, Palette.TextPrimary);
+			float titleLeft = Layout.ContentPadding;
+			float titleTop = UI.Height - 0.6f;
+			UI.DrawText("TERBIUM 65", theme.FontBold, theme.FontSizeRegular + 0.1f,
+				new Vector2(titleLeft, titleTop), Anchor.TopLeft, Color.white);
 
-			float subtitleTop = UI.Height - 2.4f;
-			UI.DrawText("Ternary Logic Design Environment", theme.FontRegular, theme.FontSizeRegular * 0.75f,
-				new Vector2(titleLeft, subtitleTop), Anchor.TopLeft, Palette.TextSecondary);
+			float subtitleTop = UI.Height - 2.3f;
+			UI.DrawText("Ternary Design Environment", theme.FontRegular, theme.FontSizeRegular * 0.7f,
+				new Vector2(titleLeft, subtitleTop), Anchor.TopLeft, new Color(1, 1, 1, 0.6f));
 
 			// Right: Version
-			float titleRight = UI.Width - 2.0f;
-			UI.DrawText(versionString, theme.FontRegular, theme.FontSizeRegular * 0.78f,
-				new Vector2(titleRight, UI.Height - Layout.HeaderHeight / 2), Anchor.CentreRight, Palette.TextSecondary);
+			float titleRight = UI.Width - Layout.ContentPadding;
+			UI.DrawText(versionString, theme.FontRegular, theme.FontSizeRegular * 0.8f,
+				new Vector2(titleRight, titleTop), Anchor.TopRight, new Color(1, 1, 1, 0.6f));
 		}
 
 		static void DrawFooter()
 		{
 			DrawSettings.UIThemeDLS theme = DrawSettings.ActiveUITheme;
+			Color footerBg = ColHelper.MakeCol("#17191C");
+			Color footerBorder = ColHelper.MakeCol("#292D32");
 
-			// Footer background (#18191A)
-			UI.DrawPanel(new Vector2(0, 0), 
-				new Vector2(UI.Width, Layout.FooterHeight),
-				Palette.Surface, Anchor.BottomLeft);
+			// Footer background
+			UI.DrawPanel(new Vector2(UI.Width / 2, Layout.FooterHeight / 2), 
+				new Vector2(UI.Width, Layout.FooterHeight), footerBg, Anchor.Centre);
 
-			// Top border (#2B2C2D)
-			UI.DrawLine(new Vector2(0, Layout.FooterHeight),
-				new Vector2(UI.Width, Layout.FooterHeight),
-				0.08f, Palette.Border);
+			// Top border
+			UI.DrawPanel(new Vector2(UI.Width / 2, Layout.FooterHeight), 
+				new Vector2(UI.Width, 0.06f), footerBorder, Anchor.BottomCentre);
 
 			// Left: Author string
-			float footerLeft = 2.0f;
+			float footerLeft = Layout.ContentPadding;
 			UI.DrawText(authorString, theme.FontRegular, theme.FontSizeRegular * 0.7f,
-				new Vector2(footerLeft, Layout.FooterHeight / 2), Anchor.CentreLeft, 
-				Palette.TextDisabled);
-
-			// Right: Version tag
-			float footerRight = UI.Width - 2.0f;
-			UI.DrawText(versionString, theme.FontRegular, theme.FontSizeRegular * 0.7f,
-				new Vector2(footerRight, Layout.FooterHeight / 2), Anchor.CentreRight,
-				Palette.TextDisabled);
+				new Vector2(footerLeft, Layout.FooterHeight - 0.8f), Anchor.TopLeft, 
+				new Color(1, 1, 1, 0.5f));
 		}
 
 		static string ResolutionToString(Vector2Int r) => $"{r.x} x {r.y}";

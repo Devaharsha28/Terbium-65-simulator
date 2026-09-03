@@ -3,7 +3,7 @@
   "DLSVersion_LastSaved": "2.1.6",
   "DLSVersion_EarliestCompatible": "2.0.0",
   "CreationTime": "2026-08-29T11:33:03.743+05:30",
-  "LastSaveTime": "2026-08-29T13:52:47.436+05:30",
+  "LastSaveTime": "2026-09-03T00:47:28.787+05:30",
   "Prefs_MainPinNamesDisplayMode": 1,
   "Prefs_ChipPinNamesDisplayMode": 1,
   "Prefs_GridDisplayMode": 0,
@@ -59,6 +59,11 @@
       "Chips":["ROM 256×16"],
       "IsToggledOpen":false,
       "Name":"MEMORY"
+    },
+    {
+      "Chips":["BUZZER","qwert"],
+      "IsToggledOpen":false,
+      "Name":"OTHER"
     }
   ]
 }
