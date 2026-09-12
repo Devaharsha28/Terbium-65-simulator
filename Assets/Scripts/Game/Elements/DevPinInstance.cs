@@ -35,6 +35,12 @@ namespace DLS.Game
 			Pin = new PinInstance(pinDescription, new PinAddress(ID, 0), this, isInput);
 			pinValueDisplayMode = pinDescription.ValueDisplayMode;
 
+			// Initialize ternary state for 1-bit input pins
+			if (BitCount == PinBitCount.Bit1 && IsInputPin)
+			{
+				PinState.SetTritValue(ref Pin.PlayerInputState, -1);
+			}
+
 			// Calculate layout info
 			faceDir = new Vector2(IsInputPin ? 1 : -1, 0);
 			StateGridDimensions = BitCount switch
@@ -119,7 +125,24 @@ namespace DLS.Game
 
 		public void ToggleState(int bitIndex)
 		{
-			PinState.Toggle(ref Pin.PlayerInputState, bitIndex);
+			// For 1-bit input pins, cycle through ternary values: -1 -> 0 -> +1 -> -1
+			if (BitCount == PinBitCount.Bit1 && IsInputPin && bitIndex == 0)
+			{
+				sbyte currentState = PinState.GetTritValue(Pin.PlayerInputState);
+				sbyte nextState = currentState switch
+				{
+					-1 => 0,
+					0 => 1,
+					1 => -1,
+					_ => -1 // If disconnected or unknown, start at negative
+				};
+				PinState.SetTritValue(ref Pin.PlayerInputState, nextState);
+			}
+			else
+			{
+				// For multi-bit or other cases, use original binary toggle (preserved for compatibility)
+				PinState.Toggle(ref Pin.PlayerInputState, bitIndex);
+			}
 		}
 
 		public bool PointIsInInteractionBounds(Vector2 point) => PointIsInHandleBounds(point) || PointIsInStateIndicatorBounds(point);

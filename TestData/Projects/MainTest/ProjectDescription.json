@@ -3,7 +3,7 @@
   "DLSVersion_LastSaved": "2.1.6",
   "DLSVersion_EarliestCompatible": "2.0.0",
   "CreationTime": "2026-08-29T11:33:03.743+05:30",
-  "LastSaveTime": "2026-09-12T20:49:11.444+05:30",
+  "LastSaveTime": "2026-09-12T21:08:44.602+05:30",
   "Prefs_MainPinNamesDisplayMode": 1,
   "Prefs_ChipPinNamesDisplayMode": 1,
   "Prefs_GridDisplayMode": 1,
@@ -24,18 +24,6 @@
     },
     {
       "Name":"NAND",
-      "IsCollection":false
-    },
-    {
-      "Name":"qwert",
-      "IsCollection":false
-    },
-    {
-      "Name":"qwetu",
-      "IsCollection":false
-    },
-    {
-      "Name":"hello",
       "IsCollection":false
     }
   ],

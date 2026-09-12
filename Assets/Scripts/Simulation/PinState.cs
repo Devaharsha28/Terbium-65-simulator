@@ -67,5 +67,67 @@ namespace DLS.Simulation
 		}
 
 		public static void SetAllDisconnected(ref uint state) => Set(ref state, 0, ushort.MaxValue);
+
+		// ---- Ternary (Balanced Ternary) Representation ----
+		// For single-trit operation, we use sbyte representation:
+		// -1 = negative logic
+		// 0 = zero logic
+		// +1 = positive logic
+
+		public const sbyte TritNegative = -1;
+		public const sbyte TritZero = 0;
+		public const sbyte TritPositive = 1;
+
+		// Convert ternary sbyte to uint for logic state
+		// Maps: -1 -> 0, 0 -> 1, +1 -> 2
+		public static uint TritToUint(sbyte trit)
+		{
+			return trit switch
+			{
+				TritNegative => 0,
+				TritZero => 1,
+				TritPositive => 2,
+				_ => 1 // Default to zero for unknown values
+			};
+		}
+
+		// Convert uint logic bits back to ternary sbyte
+		public static sbyte UintToTrit(uint value)
+		{
+			return (value & 3) switch
+			{
+				0 => TritNegative,
+				1 => TritZero,
+				2 => TritPositive,
+				_ => TritZero
+			};
+		}
+
+		// Get ternary value from uint state (logic value only)
+		public static sbyte GetTritValue(uint state)
+		{
+			return UintToTrit(state);
+		}
+
+		// Set ternary value in uint state (and set it as connected)
+		public static void SetTritValue(ref uint state, sbyte trit)
+		{
+			// Clear logic bits (0-1) and tristate flag for bit 0 (bit 16)
+			state &= ~((3u) | (1u << 16));
+			// Set logic bits
+			state |= TritToUint(trit);
+		}
+
+		// Set disconnected state for ternary
+		public static void SetTritDisconnected(ref uint state)
+		{
+			state |= (1u << 16);
+		}
+
+		// Check if ternary state is disconnected
+		public static bool IsTritDisconnected(uint state)
+		{
+			return (state & (1u << 16)) != 0;
+		}
 	}
 }

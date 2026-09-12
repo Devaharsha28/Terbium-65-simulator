@@ -64,6 +64,7 @@ namespace DLS.Graphics
 			Color[] stateLow = Enumerable.Repeat(MakeCol("#FF0000"), 8).ToArray();
 			Color[] stateHigh = Enumerable.Repeat(MakeCol("#00B8F0"), 8).ToArray();
 			Color[] stateHover = stateLow.Select(c => Brighten(c, 0.075f)).ToArray();
+			Color[] stateZero = Enumerable.Repeat(MakeCol("#808080"), 8).ToArray(); // Gray for zero state
 
 			return new ThemeDLS
 			{
@@ -73,6 +74,7 @@ namespace DLS.Graphics
 				SelectionBoxOtherIsInvaldCol = WithAlpha(MakeCol("#D6B77D"), 0.5f),
 				StateLowCol = stateLow,
 				StateHighCol = stateHigh,
+				StateZeroCol = stateZero,
 				StateHoverCol = stateHover,
 				StateDisconnectedCol = Color.white,
 				DevPinHandle = MakeCol("#34383F"),
@@ -222,6 +224,7 @@ namespace DLS.Graphics
 			public Color[] StateHighCol;
 			public Color[] StateHoverCol;
 			public Color[] StateLowCol;
+			public Color[] StateZeroCol; // Ternary zero state
 		}
 
 		public class UIThemeDLS
