@@ -10,8 +10,8 @@ namespace DLS.Simulation
 		public const ushort LogicHigh = 1;
 		public const ushort LogicDisconnected = 2;
 
-		// Mask for single bit value (bit state, and tristate flag)
-		public const uint SingleBitMask = 1 | (1 << 16);
+		// Mask for single trit value (2 logic bits, and 1 tristate flag)
+		public const uint SingleTritMask = 3u | (1u << 16);
 		
 		public static ushort GetBitStates(uint state) => (ushort)state;
 		public static ushort GetTristateFlags(uint state) => (ushort)(state >> 16);
@@ -23,14 +23,7 @@ namespace DLS.Simulation
 
 		public static void Set(ref uint state, uint other) => state = other;
 
-		public static ushort GetBitTristatedValue(uint state, int bitIndex)
-		{
-			ushort bitState = (ushort)((GetBitStates(state) >> bitIndex) & 1);
-			ushort tri = (ushort)((GetTristateFlags(state) >> bitIndex) & 1);
-			return (ushort)(bitState | (tri << 1)); // Combine to form tri-stated value: 0 = LOW, 1 = HIGH, 2 = DISCONNECTED
-		}
-
-		public static bool FirstBitHigh(uint state) => (state & 1) == LogicHigh;
+		public static bool FirstBitHigh(uint state) => !IsTritAtIndexDisconnected(state, 0) && GetTritAtIndex(state, 0) == TritPositive;
 
 		public static void Set4BitFrom8BitSource(ref uint state, uint source8bit, bool firstNibble)
 		{
@@ -39,31 +32,37 @@ namespace DLS.Simulation
 
 			if (firstNibble)
 			{
-				const ushort mask = 0b1111;
-				Set(ref state, (ushort)(sourceBitStates & mask), (ushort)(sourceTristateFlags & mask));
+				const ushort logicMask = 0b11111111; // 8 bits (4 trits)
+				const ushort flagMask = 0b1111;      // 4 bits (4 flags)
+				Set(ref state, (ushort)(sourceBitStates & logicMask), (ushort)(sourceTristateFlags & flagMask));
 			}
 			else
 			{
-				const uint mask = 0b11110000;
-				Set(ref state, (ushort)((sourceBitStates & mask) >> 4), (ushort)((sourceTristateFlags & mask) >> 4));
+				const ushort logicMask = 0b1111111100000000;
+				const ushort flagMask = 0b11110000;
+				Set(ref state, (ushort)((sourceBitStates & logicMask) >> 8), (ushort)((sourceTristateFlags & flagMask) >> 4));
 			}
 		}
 
 		public static void Set8BitFrom4BitSources(ref uint state, uint a, uint b)
 		{
-			ushort bitStates = (ushort)(GetBitStates(a) | (GetBitStates(b) << 4));
+			ushort bitStates = (ushort)(GetBitStates(a) | (GetBitStates(b) << 8));
 			ushort tristateFlags = (ushort)((GetTristateFlags(a) & 0b1111) | ((GetTristateFlags(b) & 0b1111) << 4));
 			Set(ref state, bitStates, tristateFlags);
 		}
 
 
-		public static void Toggle(ref uint state, int bitIndex)
+		public static void Toggle(ref uint state, int tritIndex)
 		{
-			ushort bitStates = GetBitStates(state);
-			bitStates ^= (ushort)(1u << bitIndex);
-
-			// Clear tristate flags (can't be disconnected if toggling as only input dev pins are allowed)
-			Set(ref state, bitStates, 0);
+			sbyte currentTrit = GetTritAtIndex(state, tritIndex);
+			sbyte nextTrit = currentTrit switch
+			{
+				-1 => 0,
+				0 => 1,
+				1 => -1,
+				_ => -1
+			};
+			SetTritAtIndex(ref state, tritIndex, nextTrit);
 		}
 
 		public static void SetAllDisconnected(ref uint state) => Set(ref state, 0, ushort.MaxValue);
@@ -112,22 +111,64 @@ namespace DLS.Simulation
 		// Set ternary value in uint state (and set it as connected)
 		public static void SetTritValue(ref uint state, sbyte trit)
 		{
-			// Clear logic bits (0-1) and tristate flag for bit 0 (bit 16)
-			state &= ~((3u) | (1u << 16));
-			// Set logic bits
-			state |= TritToUint(trit);
+			SetTritAtIndex(ref state, 0, trit);
 		}
 
 		// Set disconnected state for ternary
 		public static void SetTritDisconnected(ref uint state)
 		{
-			state |= (1u << 16);
+			SetTritAtIndexDisconnected(ref state, 0);
 		}
 
 		// Check if ternary state is disconnected
 		public static bool IsTritDisconnected(uint state)
 		{
-			return (state & (1u << 16)) != 0;
+			return IsTritAtIndexDisconnected(state, 0);
+		}
+
+		// ---- Multi-trit Generalized Helpers ----
+
+		public static sbyte GetTritAtIndex(uint state, int tritIndex)
+		{
+			uint shift = (uint)(tritIndex * 2);
+			uint logicBits = (state >> (int)shift) & 3u;
+			return UintToTrit(logicBits);
+		}
+
+		public static void SetTritAtIndex(ref uint state, int tritIndex, sbyte trit)
+		{
+			uint logicShift = (uint)(tritIndex * 2);
+			uint flagShift = (uint)(16 + tritIndex);
+			
+			// Clear the logic bits and the disconnected flag
+			state &= ~( (3u << (int)logicShift) | (1u << (int)flagShift) );
+			// Set the logic bits
+			state |= (TritToUint(trit) << (int)logicShift);
+		}
+
+		public static bool IsTritAtIndexDisconnected(uint state, int tritIndex)
+		{
+			uint flagShift = (uint)(16 + tritIndex);
+			return (state & (1u << (int)flagShift)) != 0;
+		}
+
+		public static void SetTritAtIndexDisconnected(ref uint state, int tritIndex)
+		{
+			uint flagShift = (uint)(16 + tritIndex);
+			state |= (1u << (int)flagShift);
+		}
+
+		public static int GetTernaryDecimalValue(uint state, int numTrits)
+		{
+			int displayValue = 0;
+			int weight = 1;
+			for (int i = 0; i < numTrits; i++)
+			{
+				sbyte trit = GetTritAtIndex(state, i);
+				displayValue += trit * weight;
+				weight *= 3;
+			}
+			return displayValue;
 		}
 	}
 }

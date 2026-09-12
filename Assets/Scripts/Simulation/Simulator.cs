@@ -234,10 +234,64 @@ namespace DLS.Simulation
 					chip.OutputPins[0].State = (ushort)(nandOp & 1);
 					break;
 				}
+				case ChipType.Not:
+				{
+					uint inState = chip.InputPins[0].State;
+					uint outState = 0;
+					if (PinState.IsTritDisconnected(inState))
+					{
+						PinState.SetTritDisconnected(ref outState);
+					}
+					else
+					{
+						sbyte trit = PinState.GetTritValue(inState);
+						PinState.SetTritValue(ref outState, (sbyte)(-trit));
+					}
+					chip.OutputPins[0].State = outState;
+					break;
+				}
+				case ChipType.Min:
+				{
+					uint inB = chip.InputPins[0].State;
+					uint inA = chip.InputPins[1].State;
+					uint outState = 0;
+					if (PinState.IsTritDisconnected(inA) || PinState.IsTritDisconnected(inB))
+					{
+						PinState.SetTritDisconnected(ref outState);
+					}
+					else
+					{
+						sbyte tritA = PinState.GetTritValue(inA);
+						sbyte tritB = PinState.GetTritValue(inB);
+						PinState.SetTritValue(ref outState, tritA < tritB ? tritA : tritB);
+					}
+					chip.OutputPins[0].State = outState;
+					break;
+				}
+				case ChipType.Max:
+				{
+					uint inB = chip.InputPins[0].State;
+					uint inA = chip.InputPins[1].State;
+					uint outState = 0;
+					if (PinState.IsTritDisconnected(inA) || PinState.IsTritDisconnected(inB))
+					{
+						PinState.SetTritDisconnected(ref outState);
+					}
+					else
+					{
+						sbyte tritA = PinState.GetTritValue(inA);
+						sbyte tritB = PinState.GetTritValue(inB);
+						PinState.SetTritValue(ref outState, tritA > tritB ? tritA : tritB);
+					}
+					chip.OutputPins[0].State = outState;
+					break;
+				}
 				case ChipType.Clock:
 				{
 					bool high = stepsPerClockTransition != 0 && ((simulationFrame / stepsPerClockTransition) & 1) == 0;
-					PinState.Set(ref chip.OutputPins[0].State, high ? PinState.LogicHigh : PinState.LogicLow);
+					uint state = 0;
+					PinState.SetTritValue(ref state, high ? PinState.TritPositive : PinState.TritNegative);
+					chip.OutputPins[0].State = state;
 					break;
 				}
 				case ChipType.Pulse:
@@ -260,15 +314,16 @@ namespace DLS.Simulation
 						}
 					}
 
-					uint outputState = PinState.LogicLow;
+					uint outputState = 0;
+					PinState.SetTritValue(ref outputState, PinState.TritNegative);
 					if (pulseTicksRemaining > 0)
 					{
 						chip.InternalState[1]--;
-						outputState = PinState.LogicHigh;
+						PinState.SetTritValue(ref outputState, PinState.TritPositive);
 					}
-					else if (PinState.GetTristateFlags(inputState) != 0)
+					else if (PinState.IsTritDisconnected(inputState))
 					{
-						PinState.SetAllDisconnected(ref outputState);
+						PinState.SetTritDisconnected(ref outputState);
 					}
 
 					chip.OutputPins[0].State = outputState;
@@ -278,33 +333,38 @@ namespace DLS.Simulation
 				}
 				case ChipType.Split_4To1Bit:
 				{
-					uint inState4Bit = chip.InputPins[0].State;
-					chip.OutputPins[0].State = (inState4Bit >> 3) & PinState.SingleBitMask;
-					chip.OutputPins[1].State = (inState4Bit >> 2) & PinState.SingleBitMask;
-					chip.OutputPins[2].State = (inState4Bit >> 1) & PinState.SingleBitMask;
-					chip.OutputPins[3].State = (inState4Bit >> 0) & PinState.SingleBitMask;
+					uint inState = chip.InputPins[0].State;
+					for (int i = 0; i < 4; i++)
+					{
+						uint outState = 0;
+						PinState.SetTritAtIndex(ref outState, 0, PinState.GetTritAtIndex(inState, 3 - i));
+						if (PinState.IsTritAtIndexDisconnected(inState, 3 - i)) PinState.SetTritAtIndexDisconnected(ref outState, 0);
+						chip.OutputPins[i].State = outState;
+					}
 					break;
 				}
 				case ChipType.Merge_1To4Bit:
 				{
-					uint stateA = chip.InputPins[3].State & PinState.SingleBitMask; // lsb
-					uint stateB = chip.InputPins[2].State & PinState.SingleBitMask;
-					uint stateC = chip.InputPins[1].State & PinState.SingleBitMask;
-					uint stateD = chip.InputPins[0].State & PinState.SingleBitMask;
-					chip.OutputPins[0].State = stateA | stateB << 1 | stateC << 2 | stateD << 3;
+					uint outState = 0;
+					for (int i = 0; i < 4; i++)
+					{
+						uint inState = chip.InputPins[3 - i].State;
+						PinState.SetTritAtIndex(ref outState, i, PinState.GetTritAtIndex(inState, 0));
+						if (PinState.IsTritAtIndexDisconnected(inState, 0)) PinState.SetTritAtIndexDisconnected(ref outState, i);
+					}
+					chip.OutputPins[0].State = outState;
 					break;
 				}
 				case ChipType.Merge_1To8Bit:
 				{
-					uint stateA = chip.InputPins[7].State & PinState.SingleBitMask; // lsb
-					uint stateB = chip.InputPins[6].State & PinState.SingleBitMask;
-					uint stateC = chip.InputPins[5].State & PinState.SingleBitMask;
-					uint stateD = chip.InputPins[4].State & PinState.SingleBitMask;
-					uint stateE = chip.InputPins[3].State & PinState.SingleBitMask;
-					uint stateF = chip.InputPins[2].State & PinState.SingleBitMask;
-					uint stateG = chip.InputPins[1].State & PinState.SingleBitMask;
-					uint stateH = chip.InputPins[0].State & PinState.SingleBitMask;
-					chip.OutputPins[0].State = stateA | stateB << 1 | stateC << 2 | stateD << 3 | stateE << 4 | stateF << 5 | stateG << 6 | stateH << 7;
+					uint outState = 0;
+					for (int i = 0; i < 8; i++)
+					{
+						uint inState = chip.InputPins[7 - i].State;
+						PinState.SetTritAtIndex(ref outState, i, PinState.GetTritAtIndex(inState, 0));
+						if (PinState.IsTritAtIndexDisconnected(inState, 0)) PinState.SetTritAtIndexDisconnected(ref outState, i);
+					}
+					chip.OutputPins[0].State = outState;
 					break;
 				}
 				case ChipType.Merge_4To8Bit:
@@ -326,15 +386,14 @@ namespace DLS.Simulation
 				}
 				case ChipType.Split_8To1Bit:
 				{
-					uint in8 = chip.InputPins[0].State;
-					chip.OutputPins[0].State = (in8 >> 7) & PinState.SingleBitMask;
-					chip.OutputPins[1].State = (in8 >> 6) & PinState.SingleBitMask;
-					chip.OutputPins[2].State = (in8 >> 5) & PinState.SingleBitMask;
-					chip.OutputPins[3].State = (in8 >> 4) & PinState.SingleBitMask;
-					chip.OutputPins[4].State = (in8 >> 3) & PinState.SingleBitMask;
-					chip.OutputPins[5].State = (in8 >> 2) & PinState.SingleBitMask;
-					chip.OutputPins[6].State = (in8 >> 1) & PinState.SingleBitMask;
-					chip.OutputPins[7].State = (in8 >> 0) & PinState.SingleBitMask;
+					uint inState = chip.InputPins[0].State;
+					for (int i = 0; i < 8; i++)
+					{
+						uint outState = 0;
+						PinState.SetTritAtIndex(ref outState, 0, PinState.GetTritAtIndex(inState, 7 - i));
+						if (PinState.IsTritAtIndexDisconnected(inState, 7 - i)) PinState.SetTritAtIndexDisconnected(ref outState, 0);
+						chip.OutputPins[i].State = outState;
+					}
 					break;
 				}
 				case ChipType.TriStateBuffer:
@@ -351,7 +410,9 @@ namespace DLS.Simulation
 				case ChipType.Key:
 				{
 					bool isHeld = SimKeyboardHelper.KeyIsHeld((char)chip.InternalState[0]);
-					chip.OutputPins[0].State = isHeld ? PinState.LogicHigh : PinState.LogicLow;
+					uint state = 0;
+					PinState.SetTritValue(ref state, isHeld ? PinState.TritPositive : PinState.TritNegative);
+					chip.OutputPins[0].State = state;
 					break;
 				}
 				case ChipType.DisplayRGB:

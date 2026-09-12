@@ -35,7 +35,7 @@ namespace DLS.Game
 
 			IsBusPin = parent is SubChipInstance subchip && subchip.IsBus;
 			faceRight = isSourcePin;
-			PinState.SetTritDisconnected(ref State);
+			PinState.SetAllDisconnected(ref State);
 		}
 
 		public Vector2 ForwardDir => faceRight ? Vector2.right : Vector2.left;
@@ -68,34 +68,25 @@ namespace DLS.Game
 		public Color GetColLow() => DrawSettings.ActiveTheme.StateLowCol[(int)Colour];
 		public Color GetColHigh() => DrawSettings.ActiveTheme.StateHighCol[(int)Colour];
 
-		public Color GetStateCol(int bitIndex, bool hover = false, bool canUsePlayerState = true)
+		public Color GetStateCol(int tritIndex, bool hover = false, bool canUsePlayerState = true)
 		{
 			uint pinState = (IsSourcePin && canUsePlayerState) ? PlayerInputState : State; // dev input pin uses player state (so it updates even when sim is paused)
 			
-			// For single-trit operation, use ternary value
-			if (bitCount == PinBitCount.Bit1 && bitIndex == 0)
+			if (PinState.IsTritAtIndexDisconnected(pinState, tritIndex)) 
+				return DrawSettings.ActiveTheme.StateDisconnectedCol;
+			
+			sbyte tritValue = PinState.GetTritAtIndex(pinState, tritIndex);
+			
+			// Map ternary values to colors: -1 = red (low), 0 = gray (zero), +1 = blue (high)
+			Color baseCol = tritValue switch
 			{
-				sbyte tritValue = PinState.GetTritValue(pinState);
-				
-				if (PinState.IsTritDisconnected(pinState)) 
-					return DrawSettings.ActiveTheme.StateDisconnectedCol;
-				
-				// Map ternary values to colors: -1 = red (low), 0 = gray (zero), +1 = blue (high)
-				return tritValue switch
-				{
-					PinState.TritNegative => DrawSettings.ActiveTheme.StateLowCol[(int)Colour],
-					PinState.TritZero => DrawSettings.ActiveTheme.StateZeroCol[(int)Colour], // Special color for zero state
-					PinState.TritPositive => DrawSettings.ActiveTheme.StateHighCol[(int)Colour],
-					_ => DrawSettings.ActiveTheme.StateDisconnectedCol
-				};
-			}
-			
-			// For multi-bit or fallback, use original binary logic
-			uint state = PinState.GetBitTristatedValue(pinState, bitIndex);
+				PinState.TritNegative => DrawSettings.ActiveTheme.StateLowCol[(int)Colour],
+				PinState.TritZero => DrawSettings.ActiveTheme.StateZeroCol[(int)Colour], // Special color for zero state
+				PinState.TritPositive => DrawSettings.ActiveTheme.StateHighCol[(int)Colour],
+				_ => DrawSettings.ActiveTheme.StateDisconnectedCol
+			};
 
-			if (state == PinState.LogicDisconnected) return DrawSettings.ActiveTheme.StateDisconnectedCol;
-			return DrawSettings.GetStateColour(state == PinState.LogicHigh, (uint)Colour, hover);
-			
+			return hover ? Color.Lerp(baseCol, Color.white, 0.25f) : baseCol;
 		}
 	}
 }

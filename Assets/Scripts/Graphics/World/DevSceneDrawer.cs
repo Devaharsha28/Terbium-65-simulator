@@ -618,6 +618,14 @@ namespace DLS.Graphics
 			Draw.Point(devPin.StateDisplayPosition, DevPinStateDisplayRadius + DevPinStateDisplayOutline, ColHelper.Darken(stateCol, 1.25f));
 			Draw.Point(devPin.StateDisplayPosition, DevPinStateDisplayRadius, stateCol);
 
+			uint state = devPin.IsInputPin ? devPin.Pin.PlayerInputState : devPin.Pin.State;
+			if (!PinState.IsTritAtIndexDisconnected(state, 0))
+			{
+				sbyte trit = PinState.GetTritAtIndex(state, 0);
+				string tritStr = trit == PinState.TritNegative ? "-" : trit == PinState.TritPositive ? "+" : "0";
+				Draw.Text(FontBold, tritStr, FontSizePinLabel * 1.25f, devPin.StateDisplayPosition, Anchor.TextCentre, Color.white);
+			}
+
 			// Draw pin and handle
 			DrawPin(devPin.Pin);
 			DrawPinHandle(devPin, devPin.HandlePosition, devPin.GetHandleSize());
@@ -670,6 +678,15 @@ namespace DLS.Graphics
 					}
 
 					Draw.Quad(pos, squareDisplaySize, stateCol);
+					
+					uint state = devPin.IsInputPin ? devPin.Pin.PlayerInputState : devPin.Pin.State;
+					if (!PinState.IsTritAtIndexDisconnected(state, currBitIndex))
+					{
+						sbyte trit = PinState.GetTritAtIndex(state, currBitIndex);
+						string tritStr = trit == PinState.TritNegative ? "-" : trit == PinState.TritPositive ? "+" : "0";
+						Draw.Text(FontBold, tritStr, FontSizePinLabel * 1.25f, pos, Anchor.TextCentre, Color.white);
+					}
+
 					currBitIndex--;
 				}
 			}

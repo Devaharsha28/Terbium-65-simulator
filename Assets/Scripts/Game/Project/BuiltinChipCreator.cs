@@ -24,6 +24,9 @@ namespace DLS.Game
 				CreateInputKeyChip(),
 				// ---- Basic Chips ----
 				CreateNand(),
+				CreateNot(),
+				CreateMin(),
+				CreateMax(),
 				CreateTristateBuffer(),
 				CreateClock(),
 				CreatePulse(),
@@ -64,6 +67,39 @@ namespace DLS.Game
 			PinDescription[] outputPins = { CreatePinDescription("OUT", 2) };
 
 			return CreateBuiltinChipDescription(ChipType.Nand, size, col, inputPins, outputPins);
+		}
+
+		static ChipDescription CreateNot()
+		{
+			Color col = new(0.73f, 0.26f, 0.26f);
+			Vector2 size = new(CalculateGridSnappedWidth(GridSize * 8), GridSize * 3);
+
+			PinDescription[] inputPins = { CreatePinDescription("IN", 0) };
+			PinDescription[] outputPins = { CreatePinDescription("OUT", 1) };
+
+			return CreateBuiltinChipDescription(ChipType.Not, size, col, inputPins, outputPins);
+		}
+
+		static ChipDescription CreateMin()
+		{
+			Color col = new(0.3f, 0.5f, 0.7f);
+			Vector2 size = new(CalculateGridSnappedWidth(GridSize * 8), GridSize * 4);
+
+			PinDescription[] inputPins = { CreatePinDescription("IN B", 0), CreatePinDescription("IN A", 1) };
+			PinDescription[] outputPins = { CreatePinDescription("OUT", 2) };
+
+			return CreateBuiltinChipDescription(ChipType.Min, size, col, inputPins, outputPins);
+		}
+
+		static ChipDescription CreateMax()
+		{
+			Color col = new(0.7f, 0.5f, 0.3f);
+			Vector2 size = new(CalculateGridSnappedWidth(GridSize * 8), GridSize * 4);
+
+			PinDescription[] inputPins = { CreatePinDescription("IN B", 0), CreatePinDescription("IN A", 1) };
+			PinDescription[] outputPins = { CreatePinDescription("OUT", 2) };
+
+			return CreateBuiltinChipDescription(ChipType.Max, size, col, inputPins, outputPins);
 		}
 
 		static ChipDescription CreateBuzzer()

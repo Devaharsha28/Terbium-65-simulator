@@ -6,6 +6,9 @@ namespace DLS.Description
 
 		// ---- Basic Chips ----
 		Nand,
+		Not,
+		Min,
+		Max,
 		TriStateBuffer,
 		Clock,
 		Pulse,

@@ -35,10 +35,10 @@ namespace DLS.Game
 			Pin = new PinInstance(pinDescription, new PinAddress(ID, 0), this, isInput);
 			pinValueDisplayMode = pinDescription.ValueDisplayMode;
 
-			// Initialize ternary state for 1-bit input pins
-			if (BitCount == PinBitCount.Bit1 && IsInputPin)
+			// Initialize ternary state for all input pins
+			if (IsInputPin)
 			{
-				PinState.SetTritValue(ref Pin.PlayerInputState, -1);
+				PinState.Set(ref Pin.PlayerInputState, 0, 0); 
 			}
 
 			// Calculate layout info
@@ -94,15 +94,15 @@ namespace DLS.Game
 
 		public int GetStateDecimalDisplayValue()
 		{
-			uint rawValue = PinState.GetBitStates(Pin.State);
-			int displayValue = (int)rawValue;
-
-			if (pinValueDisplayMode == PinValueDisplayMode.SignedDecimal)
+			uint state = Pin.State; // Use the actual resolved sim state for display
+			int numTrits = BitCount switch
 			{
-				displayValue = Maths.TwosComplement(rawValue, (int)BitCount);
-			}
-
-			return displayValue;
+				PinBitCount.Bit1 => 1,
+				PinBitCount.Bit4 => 4,
+				PinBitCount.Bit8 => 8,
+				_ => 1
+			};
+			return PinState.GetTernaryDecimalValue(state, numTrits);
 		}
 
 		Bounds2D CreateBoundingBox(float pad)
@@ -125,22 +125,8 @@ namespace DLS.Game
 
 		public void ToggleState(int bitIndex)
 		{
-			// For 1-bit input pins, cycle through ternary values: -1 -> 0 -> +1 -> -1
-			if (BitCount == PinBitCount.Bit1 && IsInputPin && bitIndex == 0)
+			if (IsInputPin)
 			{
-				sbyte currentState = PinState.GetTritValue(Pin.PlayerInputState);
-				sbyte nextState = currentState switch
-				{
-					-1 => 0,
-					0 => 1,
-					1 => -1,
-					_ => -1 // If disconnected or unknown, start at negative
-				};
-				PinState.SetTritValue(ref Pin.PlayerInputState, nextState);
-			}
-			else
-			{
-				// For multi-bit or other cases, use original binary toggle (preserved for compatibility)
 				PinState.Toggle(ref Pin.PlayerInputState, bitIndex);
 			}
 		}

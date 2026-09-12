@@ -11,6 +11,9 @@ namespace DLS.Description
 		{
 			// ---- Basic Chips ----
 			{ ChipType.Nand, "NAND" },
+			{ ChipType.Not, "NOT" },
+			{ ChipType.Min, "MIN" },
+			{ ChipType.Max, "MAX" },
 			{ ChipType.Clock, "CLOCK" },
 			{ ChipType.Pulse, "PULSE" },
 			{ ChipType.TriStateBuffer, "3-STATE BUFFER" },
