@@ -127,6 +127,15 @@ namespace Seb.Vis.UI
 			Draw.StartLayer(Vector2.zero, 1, true);
 		}
 
+		// Start a new overlay layer for popups/modals that must render above all normal UI
+		// This ensures that overlay shapes (like popup backgrounds) cover underlying text
+		// Note: Currently this is functionally identical to StartNewLayer() but provides
+		// semantic clarity for overlay/modal rendering purposes
+		public static void StartOverlayLayer()
+		{
+			Draw.StartLayer(Vector2.zero, 1, true);
+		}
+
 		// Creates a scope in which the bounding box of all UI elements is tracked.
 		// If draw is set to false, elements will not be rendered; only the bounds will be calculated.
 		// Usage: using (UI.CreateBoundsScope(draw = true)) { var bounds = UI.GetCurrentBoundsScope(); }

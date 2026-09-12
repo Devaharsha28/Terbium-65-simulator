@@ -117,8 +117,9 @@ namespace DLS.Graphics
 
 		static void DrawPanelHeader(string text, Vector2 topLeft, float width)
 		{
-			Color textCol = ColHelper.MakeCol("#3CD168");
-			Color bgCol = ColHelper.MakeCol("#1D1D1D");
+			// Keep library chrome consistent with the active app theme.
+			Color textCol = ThemePalette.Parse(ThemeManager.ActivePalette.Accent);
+			Color bgCol = ThemePalette.Parse(ThemeManager.ActivePalette.PanelElevated);
 			MenuHelper.DrawLeftAlignTextWithBackground(text, topLeft, new Vector2(width, 2.3f), Anchor.TopLeft, textCol, bgCol, true);
 		}
 

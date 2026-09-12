@@ -84,6 +84,7 @@ namespace DLS.Graphics
 			{
 				initialized = true;
 				InitHexFields();
+				UI.GetWheelSelectorState(ID_PresetWheel).index = ThemeManager.ActivePresetName == ThemeManager.PresetName_TerbiumDark ? 0 : 1;
 			}
 
 			using (UI.BeginBoundsScope(true))
@@ -95,7 +96,7 @@ namespace DLS.Graphics
 				Vector2 pos     = topLeft;
 
 				// ---- Preset controls ----
-				Color headerCol = ColHelper.MakeCol("#4C8DFF");
+				Color headerCol = ThemePalette.Parse(ThemeManager.ActivePalette.Accent);
 				DrawSectionHeader(ref pos, "THEME PRESET", headerCol, theme);
 
 				// Preset wheel
@@ -103,7 +104,7 @@ namespace DLS.Graphics
 				int currPresetIdx    = ThemeManager.ActivePresetName == ThemeManager.PresetName_TerbiumDark ? 0 : 1;
 				Vector2 wheelSize    = new(22f, DrawSettings.SelectorWheelHeight);
 				UI.DrawText("Preset", theme.FontRegular, theme.FontSizeRegular,
-					pos, Anchor.CentreLeft, Color.white);
+					pos, Anchor.CentreLeft, ThemePalette.Parse(ThemeManager.ActivePalette.TextPrimary));
 				int chosenPreset = UI.WheelSelector(ID_PresetWheel, presetNames,
 					pos + Vector2.right * (MenuWidth - wheelSize.x), wheelSize, theme.OptionsWheel, Anchor.CentreLeft);
 				pos.y -= RowHeight + RowSpacing;
@@ -157,7 +158,7 @@ namespace DLS.Graphics
 		static void DrawScrollContent(Vector2 topLeft, float width, bool isLayoutPass)
 		{
 			DrawSettings.UIThemeDLS theme = DrawSettings.ActiveUITheme;
-			Color headerCol               = ColHelper.MakeCol("#4C8DFF");
+			Color headerCol               = ThemePalette.Parse(ThemeManager.ActivePalette.Accent);
 			Vector2 pos                   = topLeft + Vector2.down * 1f;
 
 			DrawColorGroup(ref pos, width, "INTERFACE", InterfaceColors, headerCol, theme, isLayoutPass);
@@ -184,7 +185,7 @@ namespace DLS.Graphics
 		{
 			// Label
 			UI.DrawText(label, theme.FontRegular, theme.FontSizeRegular,
-				pos, Anchor.CentreLeft, Color.white);
+				pos, Anchor.CentreLeft, ThemePalette.Parse(ThemeManager.ActivePalette.TextPrimary));
 
 			// Color swatch (drawn as a filled panel)
 			Color currentColor = ThemePalette.Parse(ThemeManager.GetHex(fieldName));
@@ -199,12 +200,12 @@ namespace DLS.Graphics
 
 			InputFieldTheme hexInputTheme = new InputFieldTheme
 			{
-				font           = theme.FontRegular,
+				font           = FontType.JetbrainsMonoRegular,
 				fontSize       = theme.FontSizeRegular,
-				bgCol          = ColHelper.MakeCol("#1C1E23"),
-				defaultTextCol = ColHelper.MakeCol("#5F646B"),
-				textCol        = Color.white,
-				focusBorderCol = ColHelper.MakeCol("#4C8DFF")
+				bgCol          = ThemePalette.Parse(ThemeManager.ActivePalette.Workspace),
+				defaultTextCol = ThemePalette.Parse(ThemeManager.ActivePalette.TextDisabled),
+				textCol        = ThemePalette.Parse(ThemeManager.ActivePalette.TextPrimary),
+				focusBorderCol = ThemePalette.Parse(ThemeManager.ActivePalette.Accent)
 			};
 
 			InputFieldState hexState = UI.InputField(hexHandle, hexInputTheme,

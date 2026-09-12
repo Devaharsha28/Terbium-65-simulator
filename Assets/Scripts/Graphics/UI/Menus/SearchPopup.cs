@@ -23,6 +23,7 @@ namespace DLS.Graphics
 		static readonly UI.ScrollViewDrawElementFunc drawChipSearchEntry = DrawChipSearchEntry;
 		static int menuOpenedFrame;
 		static bool isDraggingScrollbar;
+		static int selectedResultIndex = -1; // Track which result is currently selected
 
 		static readonly List<string> recentChipNames = new();
 
@@ -54,21 +55,53 @@ namespace DLS.Graphics
 			}
 
 			// ---- keyboard shortcuts ----
+			// Keyboard navigation for search results
+			if (filteredChipNames.Length > 0)
+			{
+				if (InputHelper.IsKeyDownThisFrame(KeyCode.UpArrow))
+				{
+					selectedResultIndex = Mathf.Max(0, selectedResultIndex - 1);
+				}
+				else if (InputHelper.IsKeyDownThisFrame(KeyCode.DownArrow))
+				{
+					selectedResultIndex = Mathf.Min(filteredChipNames.Length - 1, selectedResultIndex + 1);
+				}
+			}
+			
 			if (KeyboardShortcuts.ConfirmShortcutTriggered)
 			{
-				foreach (string chipName in filteredChipNames)
+				// Use selected result if available, otherwise use first usable chip
+				string chipToUse = null;
+				
+				if (selectedResultIndex >= 0 && selectedResultIndex < filteredChipNames.Length)
+				{
+					chipToUse = filteredChipNames[selectedResultIndex];
+				}
+				else
+				{
+					// Fallback to first usable chip
+					foreach (string chipName in filteredChipNames)
+					{
+						if (Project.ActiveProject.ViewedChip.CanAddSubchip(chipName))
+						{
+							chipToUse = chipName;
+							break;
+						}
+					}
+				}
+				
+				if (chipToUse != null)
 				{
 					// Open first openable chip on shift/control+enter
-					if ((InputHelper.ShiftIsHeld || InputHelper.CtrlIsHeld) && !Project.ActiveProject.chipLibrary.IsBuiltinChip(chipName))
+					if ((InputHelper.ShiftIsHeld || InputHelper.CtrlIsHeld) && !Project.ActiveProject.chipLibrary.IsBuiltinChip(chipToUse))
 					{
-						OpenChip(chipName);
+						OpenChip(chipToUse);
 						return;
 					}
 					// Use first usable chip on enter
-
-					if (Project.ActiveProject.ViewedChip.CanAddSubchip(chipName))
+					if (Project.ActiveProject.ViewedChip.CanAddSubchip(chipToUse))
 					{
-						UseChip(chipName);
+						UseChip(chipToUse);
 						return;
 					}
 				}
@@ -89,8 +122,17 @@ namespace DLS.Graphics
 				string chipName = filteredChipNames[index];
 				const float nameWidth = 22f;
 
-				// Draw chip name (drawn as non-interactive button)
-				ButtonTheme nameTheme = ActiveUITheme.ChipLibraryChipToggleOn;
+				// Update selection on mouse hover (only during actual rendering)
+				bool mouseOverResult = UI.MouseInsideBounds(entryBounds);
+				if (mouseOverResult)
+				{
+					selectedResultIndex = index;
+				}
+
+				// Use neutral theme for normal results, accent theme only for selected result
+				bool isSelected = (index == selectedResultIndex);
+				ButtonTheme nameTheme = isSelected ? ActiveUITheme.SearchResultSelected : ActiveUITheme.SearchResultNormal;
+				
 				UI.Button(chipName, nameTheme, topLeft, new Vector2(nameWidth, ButtonHeight), true, false, false, Anchor.TopLeft, true, 1, true);
 
 				// Draw buttons
@@ -185,6 +227,7 @@ namespace DLS.Graphics
 		public static void OnMenuOpened()
 		{
 			menuOpenedFrame = Time.frameCount;
+			selectedResultIndex = -1; // Reset selection when menu opens
 			InputFieldState inputField = UI.GetInputFieldState(ID_SearchInput);
 			inputField.ClearText();
 
@@ -233,6 +276,7 @@ namespace DLS.Graphics
 
 		public static void Reset()
 		{
+			selectedResultIndex = -1;
 		}
 	}
 }

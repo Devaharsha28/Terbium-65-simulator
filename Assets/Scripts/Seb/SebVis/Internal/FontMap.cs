@@ -19,7 +19,9 @@ namespace Seb.Vis
 		DepartureMono,
 
 		// -- Pixel --
-		Born2bSporty //
+		Born2bSporty,
+		// Append to preserve the serialized values of existing fonts.
+		OpenSansRegular
 	}
 }
 
@@ -35,6 +37,7 @@ namespace Seb.Vis.Internal
 			(FontType.FiraCodeSemiBold, "FiraCode/FiraCode-SemiBold"),
 			(FontType.FiraCodeBold, "FiraCode/FiraCode-Bold"),
 			(FontType.MapleMonoBold, "MapleMono/MapleMono-Bold"),
+			(FontType.OpenSansRegular, "OpenSans/OpenSans-Regular"),
 			(FontType.OpenSansBold, "OpenSans/OpenSans-Bold"),
 			(FontType.LiberationMonoRegular, "LiberationMono/LiberationMono-Regular"),
 			(FontType.LiberationMonoBold, "LiberationMono/LiberationMono-Bold"),

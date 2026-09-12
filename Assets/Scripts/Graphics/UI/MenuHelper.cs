@@ -29,7 +29,7 @@ namespace DLS.Graphics
 		public static Vector2 DrawLabelSectionOfLabelInputPair(Vector2 topLeft, Vector2 size, string label, Color labelCol, bool drawBackground)
 		{
 			const float pad = 1;
-			if (drawBackground) UI.DrawPanel(topLeft, size, Color.red * 0.1f, Anchor.TopLeft);
+			if (drawBackground) UI.DrawPanel(topLeft, size, ThemePalette.Parse(ThemeManager.ActivePalette.Workspace), Anchor.TopLeft);
 			Vector2 centreLeft = topLeft + Vector2.down * size.y / 2;
 			UI.DrawText(label, Theme.FontRegular, Theme.FontSizeRegular, centreLeft + Vector2.right * pad, Anchor.TextCentreLeft, labelCol);
 			Vector2 centreRight = centreLeft + Vector2.right * size.x;
@@ -79,6 +79,9 @@ namespace DLS.Graphics
 
 		public static void DrawBackgroundOverlay()
 		{
+			// Shapes render before text within a layer. Modal backgrounds must
+			// use an overlay layer to properly cover all UI elements underneath.
+			UI.StartOverlayLayer();
 			UI.DrawFullscreenPanel(Theme.MenuBackgroundOverlayCol);
 		}
 
@@ -88,7 +91,7 @@ namespace DLS.Graphics
 			UI.ModifyPanel(panelID, contentBounds, Theme.MenuPanelCol);
 
 
-			Color outlineCol = ColHelper.MakeCol(0.26f);
+			Color outlineCol = ThemePalette.Parse(ThemeManager.ActivePalette.Border);
 			float outlineWidth = 0.05f;
 
 			UI.DrawLine(contentBounds.BottomLeft, contentBounds.TopLeft, outlineWidth, outlineCol);

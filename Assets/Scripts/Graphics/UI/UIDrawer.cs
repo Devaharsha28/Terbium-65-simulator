@@ -55,7 +55,12 @@ namespace DLS.Graphics
 		{
 			MenuType menuToDraw = ActiveMenu; // cache state in case it changes while drawing/updating the menus
 
-			if (menuToDraw != MenuType.ChipCustomization) BottomBarUI.DrawUI(project);
+			if (menuToDraw != MenuType.ChipCustomization)
+			{
+				using (UI.BeginDisabledScope(menuToDraw != MenuType.None || ContextMenu.HasFocus()))
+					EditorWorkspace.Draw(project);
+				BottomBarUI.DrawUI(project);
+			}
 
 			if (menuToDraw == MenuType.ChipSave) ChipSaveMenu.DrawMenu();
 			else if (menuToDraw == MenuType.ChipLibrary) ChipLibraryMenu.DrawMenu();
@@ -70,9 +75,7 @@ namespace DLS.Graphics
 			else if (menuToDraw == MenuType.PulseEdit) PulseEditMenu.DrawMenu();
 			else
 			{
-				bool showSimPausedBanner = project.simPaused;
-				if (showSimPausedBanner) SimPausedUI.DrawPausedBanner();
-				if (project.chipViewStack.Count > 1) ViewedChipsBar.DrawViewedChipsBanner(project, showSimPausedBanner);
+				// Navigation and simulation status live in the workspace toolbar.
 			}
 
 			ContextMenu.Update();

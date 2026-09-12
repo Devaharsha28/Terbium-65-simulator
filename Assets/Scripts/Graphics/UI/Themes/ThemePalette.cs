@@ -10,26 +10,28 @@ namespace DLS.Graphics
 	public class ThemePalette
 	{
 		// ---- Interface ----
-		public string Background    = "#121417";
-		public string Workspace     = "#1C1E23";
-		public string Panel         = "#26292E";
-		public string PanelElevated = "#31343A";
-		public string Border        = "#4C5059";
-		public string Accent        = "#4C8DFF";
-		public string AccentHover   = "#6A9EFF";
-		public string TextPrimary   = "#F5F7FA";
-		public string TextSecondary = "#A4ADB5";
-		public string TextDisabled  = "#707780";
+		// Layered neutral surfaces keep attention on the circuit, while the
+		// blue accent is reserved for focus, selection and primary actions.
+		public string Background    = "#191919";
+		public string Workspace     = "#222222";
+		public string Panel         = "#292929";
+		public string PanelElevated = "#333333";
+		public string Border        = "#454545";
+		public string Accent        = "#86AED4";
+		public string AccentHover   = "#A2C1DF";
+		public string TextPrimary   = "#E6E6E6";
+		public string TextSecondary = "#AFB5BE";
+		public string TextDisabled  = "#767E89";
 
 		// ---- Semantic UI ----
-		public string Success = "#4CAF7A";
-		public string Warning = "#EBC870";
-		public string Error   = "#D65A5A";
+		public string Success = "#83B69A";
+		public string Warning = "#D6B77D";
+		public string Error   = "#FF4040";
 
 		// ---- Ternary Logic ----
-		public string TritNegative = "#FF6B6B";
-		public string TritZero     = "#858B93";
-		public string TritPositive = "#5B9FE3";
+		public string TritNegative = "#FF0000";
+		public string TritZero     = "#FFFFFF";
+		public string TritPositive = "#00B8F0";
 
 		/// <summary>
 		/// Returns a deep copy of this palette.

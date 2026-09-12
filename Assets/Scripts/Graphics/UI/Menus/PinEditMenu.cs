@@ -65,7 +65,7 @@ namespace DLS.Graphics
 					const float wheelWidth = 15.2f;
 
 					Vector2 topLeftCurr = UI.PrevBounds.BottomLeft + Vector2.down * spacing;
-					MenuHelper.LabeledOptionsWheel("Decimal Display", Color.white, topLeftCurr, new Vector2(inputFieldBounds.Width, DrawSettings.SelectorWheelHeight), ID_ValueDisplayMode, PinDecimalDisplayOptions, wheelWidth, true);
+					MenuHelper.LabeledOptionsWheel("Decimal Display", ThemePalette.Parse(ThemeManager.ActivePalette.TextPrimary), topLeftCurr, new Vector2(inputFieldBounds.Width, DrawSettings.SelectorWheelHeight), ID_ValueDisplayMode, PinDecimalDisplayOptions, wheelWidth, true);
 				}
 
 				// Draw cancel/confirm buttons

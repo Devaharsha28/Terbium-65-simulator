@@ -16,7 +16,7 @@ namespace DLS.Graphics
 		const float buttonSpacing = 0.25f;
 		const float buttonHeight = barHeight - padY * 2;
 
-		const string shortcutTextCol = "<color=#666666ff>";
+		const string shortcutTextCol = "<color=#A0A8C5ff>";
 
 		static readonly string[] menuButtonNames =
 		{
@@ -67,6 +67,7 @@ namespace DLS.Graphics
 
 		static void DrawPopupMenu()
 		{
+			UI.StartOverlayLayer();
 			ButtonTheme theme = DrawSettings.ActiveUITheme.MenuPopupButtonTheme;
 			float menuWidth = Draw.CalculateTextBoundsSize(menuButtonNames[0].AsSpan(), theme.fontSize, theme.font).x + 1;
 			Vector2 pos = new(buttonSpacing, barHeight + buttonSpacing);
@@ -88,7 +89,7 @@ namespace DLS.Graphics
 				}
 
 				Bounds2D uiBounds = UI.GetCurrentBoundsScope();
-				UI.ModifyPanel(panelID, uiBounds.Centre, uiBounds.Size + Vector2.one * (buttonSpacing * 2), Color.white);
+				UI.ModifyPanel(panelID, uiBounds.Centre, uiBounds.Size + Vector2.one * (buttonSpacing * 2), ThemePalette.Parse(ThemeManager.ActivePalette.Border));
 			}
 
 			// Close if clicked nothing or pressed esc
@@ -140,7 +141,7 @@ namespace DLS.Graphics
 			Vector2 menuButtonSize = new(1.5f, barHeight - padY * 2);
 			bool menuButtonEnabled = !inOtherMenu;
 
-			if (UI.Button("MENU", theme.MenuButtonTheme, menuButtonPos, menuButtonSize, menuButtonEnabled, true, false, Anchor.BottomLeft, ignoreInputs: ignoreInputs))
+			if (UI.Button("Menu", theme.MenuButtonTheme, menuButtonPos, menuButtonSize, menuButtonEnabled, true, false, Anchor.BottomLeft, ignoreInputs: ignoreInputs))
 			{
 				UIDrawer.ToggleBottomPopupMenu();
 				toggleMenuFrame = Time.frameCount;
@@ -251,6 +252,7 @@ namespace DLS.Graphics
 		static void DrawCollectionsPopup()
 		{
 			if (activeCollection == null || activeCollection.Chips.Count <= 0) return;
+			UI.StartOverlayLayer();
 
 			DrawSettings.UIThemeDLS theme = DrawSettings.ActiveUITheme;
 			Project project = Project.ActiveProject;
@@ -370,7 +372,7 @@ namespace DLS.Graphics
 
 		static bool MouseIsOverBar() => InputHelper.MouseInBounds_ScreenSpace(barBounds_ScreenSpace);
 
-		static void ExitToMainMenu()
+		public static void ExitToMainMenu()
 		{
 			if (Project.ActiveProject.ActiveChipHasUnsavedChanges()) UnsavedChangesPopup.OpenPopup(ExitIfTrue);
 			else ExitIfTrue(true);
@@ -390,7 +392,7 @@ namespace DLS.Graphics
 		static void OpenLibraryMenu() => UIDrawer.SetActiveMenu(UIDrawer.MenuType.ChipLibrary);
 		static void OpenPreferencesMenu() => UIDrawer.SetActiveMenu(UIDrawer.MenuType.Preferences);
 
-		static void CreateNewChip()
+		public static void CreateNewChip()
 		{
 			if (Project.ActiveProject.ActiveChipHasUnsavedChanges()) UnsavedChangesPopup.OpenPopup(ConfirmNewChip);
 			else ConfirmNewChip(true);

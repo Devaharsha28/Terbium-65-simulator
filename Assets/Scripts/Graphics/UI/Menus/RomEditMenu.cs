@@ -307,7 +307,7 @@ namespace DLS.Graphics
 				InputFieldState inputFieldState = UI.GetInputFieldState(inputFieldID);
 
 				// Alternating colour for each row
-				Color col = index % 2 == 0 ? ColHelper.MakeCol(0.17f) : ColHelper.MakeCol(0.13f);
+				Color col = index % 2 == 0 ? ThemePalette.Parse(ThemeManager.ActivePalette.Panel) : ThemePalette.Parse(ThemeManager.ActivePalette.Workspace);
 				// Highlight row if it has focus
 				if (inputFieldState.focused)
 				{
@@ -317,7 +317,7 @@ namespace DLS.Graphics
 						focusedRowIndex = index;
 					}
 
-					col = new Color(0.33f, 0.55f, 0.34f);
+					col = Color.Lerp(ThemePalette.Parse(ThemeManager.ActivePalette.Panel), ThemePalette.Parse(ThemeManager.ActivePalette.Accent), 0.3f);
 				}
 
 				InputFieldTheme inputTheme = MenuHelper.Theme.ChipNameInputField;
@@ -329,7 +329,7 @@ namespace DLS.Graphics
 				UI.InputField(inputFieldID, inputTheme, topLeft, panelSize, "0", Anchor.TopLeft, 5, inputStringValidator);
 
 				// Draw line index
-				Color lineNumCol = inputFieldState.focused ? new Color(0.53f, 0.8f, 0.57f) : ColHelper.MakeCol(0.32f);
+				Color lineNumCol = inputFieldState.focused ? ThemePalette.Parse(ThemeManager.ActivePalette.AccentHover) : ThemePalette.Parse(ThemeManager.ActivePalette.TextDisabled);
 				UI.DrawText(rowNumberStrings[index], MenuHelper.Theme.FontBold, MenuHelper.Theme.FontSizeRegular, entryBounds.CentreLeft + Vector2.right * textPad, Anchor.TextCentreLeft, lineNumCol);
 			}
 

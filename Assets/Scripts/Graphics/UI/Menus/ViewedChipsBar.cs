@@ -19,7 +19,7 @@ namespace DLS.Graphics
 
 
 			Vector2 pos = new(pad, topLeft.y - InfoBarHeight / 2);
-			UI.DrawText(project.viewedChipsString, ActiveUITheme.FontBold, ActiveUITheme.ButtonTheme.fontSize, pos, Anchor.TextCentreLeft, Color.white);
+			UI.DrawText(project.viewedChipsString, ActiveUITheme.FontBold, ActiveUITheme.ButtonTheme.fontSize, pos, Anchor.TextCentreLeft, ThemePalette.Parse(ThemeManager.ActivePalette.TextPrimary));
 
 			// Back button
 			Vector2 buttonSize = new(8, InfoBarHeight - pad);

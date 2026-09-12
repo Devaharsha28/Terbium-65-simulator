@@ -108,7 +108,7 @@ namespace DLS.Graphics
 				var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath));
 				if (data?.palette != null)
 				{
-					ActivePalette = data.palette;
+					ActivePalette = data.presetName == PresetName_TerbiumDark ? TerbiumDarkPalette.Clone() : data.palette;
 					ActivePresetName = data.presetName ?? PresetName_Custom;
 				}
 			}
@@ -160,8 +160,8 @@ namespace DLS.Graphics
 			Color[] stateHigh  = Enumerable.Repeat(tritPos, 8).ToArray();
 			Color[] stateHover = stateLow.Select(c => Brighten(c, 0.075f)).ToArray();
 
-			t.BackgroundCol                  = background;
-			t.GridCol                        = workspace;
+			t.BackgroundCol                  = workspace;
+			t.GridCol                        = Color.Lerp(workspace, border, 0.55f);
 			t.StateLowCol                    = stateLow;
 			t.StateHighCol                   = stateHigh;
 			t.StateHoverCol                  = stateHover;
@@ -172,7 +172,7 @@ namespace DLS.Graphics
 			t.SelectionBoxOtherIsInvaldCol   = WithAlpha(warning, 0.5f);
 			t.DevPinHandle                   = border;
 			t.DevPinHandleHighlighted        = accent;
-			t.PinCol                         = panel;
+			t.PinCol                         = Color.black;
 			t.PinLabelCol                    = textSecondary;
 			t.PinHighlightCol                = tritPos;
 			t.PinInvalidCol                  = error;
@@ -185,24 +185,26 @@ namespace DLS.Graphics
 			// ---- Rebuild UIThemeDLS (menu / UI colors) ----
 			DrawSettings.UIThemeDLS ui = DrawSettings.ActiveUITheme;
 
-			FontType fontRegular = DrawSettings.FontRegular;
-			FontType fontBold    = DrawSettings.FontBold;
+			FontType fontRegular = FontType.OpenSansRegular;
+			FontType fontBold    = FontType.OpenSansBold;
 			float fontSize       = UIThemeLibrary.FontSizeMedium;
+			ui.FontRegular = fontRegular;
+			ui.FontBold = fontBold;
 
 			ui.MenuPanelCol              = panel;
-			ui.MenuBackgroundOverlayCol  = new Color(0, 0, 0, 0.85f);
+			ui.MenuBackgroundOverlayCol  = new Color(0, 0, 0, 0.65f);
 			ui.InfoBarCol                = WithAlpha(background, 0.9f);
 			ui.StarredBarCol             = panelElevated;
 			ui.ButtonTheme               = MakeBtn(fontRegular, fontSize, panelElevated, border,       accent,     textPrimary, textPrimary, textPrimary, panel, textDisabled);
 			ui.ProjectSelectionButton    = MakeBtn(fontRegular, fontSize, Color.clear,   panelElevated, accent,     textPrimary, textPrimary, textPrimary, panel, textDisabled);
-			ui.ProjectSelectionButtonSelected = MakeBtn(fontRegular, fontSize, accent,  accentHover,   tritPos,    background,  background,  background,  panel, textDisabled);
+			ui.ProjectSelectionButtonSelected = MakeBtn(fontRegular, fontSize, accent,  accentHover,   accent,    background,  background,  background,  panel, textDisabled);
 			ui.ChipButton                = MakeBtn(fontRegular, fontSize, panel,         panelElevated, accent,     textPrimary, textPrimary, textPrimary, panel, textDisabled);
-			ui.MainMenuButtonTheme       = MakeBtn(fontRegular, fontSize, panelElevated, accent,        tritPos,    textPrimary, textPrimary, textPrimary, panel, textDisabled);
-			ui.MenuButtonTheme           = MakeBtn(fontRegular, fontSize, panel,         accent,        tritPos,    textPrimary, textPrimary, textPrimary, panel, textDisabled);
+			ui.MainMenuButtonTheme       = MakeBtn(fontRegular, fontSize, panelElevated, border,        accent,    textPrimary, textPrimary, textPrimary, panel, textDisabled);
+			ui.MenuButtonTheme           = MakeBtn(fontRegular, fontSize, panel,         panelElevated, accent,    textPrimary, textPrimary, textPrimary, panel, textDisabled);
 			ui.MenuPopupButtonTheme      = MakeBtn(fontRegular, fontSize, background,    panelElevated, border,     textPrimary, textPrimary, textPrimary, panel, textDisabled);
 
-			Color colLibCollHighlight    = accentHover;
-			Color colLibChipHighlight    = tritPos;
+			Color colLibCollHighlight    = accent;
+			Color colLibChipHighlight    = accent;
 			ui.ChipLibraryCollectionToggleOff = MakeBtn(fontRegular, fontSize, panelElevated, border, colLibCollHighlight, textPrimary, textPrimary, textPrimary, panel, textDisabled);
 			ui.ChipLibraryCollectionToggleOn  = MakeBtnAuto(fontRegular, fontSize, colLibCollHighlight, background, panel, textDisabled);
 			ui.ChipLibraryChipToggleOff       = MakeBtn(fontRegular, fontSize, panel, border, colLibChipHighlight, textPrimary, textPrimary, textPrimary, panel, textDisabled);
@@ -210,7 +212,7 @@ namespace DLS.Graphics
 
 			ui.ChipNameInputField = new InputFieldTheme
 			{
-				font           = fontBold,
+				font           = FontType.JetbrainsMonoBold,
 				fontSize       = UIThemeLibrary.FontSizeVeryLarge,
 				bgCol          = workspace,
 				defaultTextCol = textSecondary,
@@ -221,7 +223,7 @@ namespace DLS.Graphics
 			ui.OptionsWheel = new WheelSelectorTheme
 			{
 				backgroundCol = panel,
-				buttonTheme   = MakeBtn(fontBold, fontSize, panelElevated, accent, tritPos, textPrimary, textPrimary, textPrimary, panel, textDisabled),
+				buttonTheme   = MakeBtn(fontBold, fontSize, panelElevated, border, accent, textPrimary, textPrimary, textPrimary, panel, textDisabled),
 				textCol       = textPrimary,
 				inactiveTextCol = textSecondary
 			};
@@ -234,13 +236,13 @@ namespace DLS.Graphics
 				scrollBarColInactive   = panelElevated,
 				scrollBarColNormal     = border,
 				scrollBarColHover      = accent,
-				scrollBarColPressed    = tritPos,
-				scrollBarWidth         = 1
+				scrollBarColPressed    = accent,
+				scrollBarWidth         = 0.55f
 			};
 
 			ui.CheckBoxTheme = new CheckboxTheme
 			{
-				boxCol  = textPrimary,
+				boxCol  = accent,
 				tickCol = workspace
 			};
 		}
@@ -255,8 +257,9 @@ namespace DLS.Graphics
 				font         = font,
 				fontSize     = fontSize,
 				paddingScale = UIThemeLibrary.PaddingScaleButton,
-				buttonCols   = new ButtonTheme.StateCols(normal, hover, press, inactive),
-				textCols     = new ButtonTheme.StateCols(textNormal, textHover, textPress, textInactive)
+				buttonCols   = new ButtonTheme.StateCols(normal, Color.Lerp(normal, hover, 0.45f), press, inactive),
+				textCols     = new ButtonTheme.StateCols(textNormal, textHover,
+					press.maxColorComponent > 0.6f ? ThemePalette.Parse(ActivePalette.Background) : textPress, textInactive)
 			};
 		}
 

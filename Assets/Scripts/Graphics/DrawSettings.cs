@@ -15,6 +15,7 @@ namespace DLS.Graphics
 		public const float PinHeight8Bit = 0.43f;
 		public const float PinRadius = PinHeight1Bit / 2;
 
+		// Circuit labels retain their stable monospace metrics.
 		public const FontType FontBold = FontType.JetbrainsMonoBold;
 		public const FontType FontRegular = FontType.JetbrainsMonoRegular;
 
@@ -60,56 +61,56 @@ namespace DLS.Graphics
 
 		static ThemeDLS CreateTheme()
 		{
-			Color[] stateLow = Enumerable.Repeat(MakeCol("#FF6B6B"), 8).ToArray();
-			Color[] stateHigh = Enumerable.Repeat(MakeCol("#5B9FE3"), 8).ToArray();
+			Color[] stateLow = Enumerable.Repeat(MakeCol("#FF0000"), 8).ToArray();
+			Color[] stateHigh = Enumerable.Repeat(MakeCol("#00B8F0"), 8).ToArray();
 			Color[] stateHover = stateLow.Select(c => Brighten(c, 0.075f)).ToArray();
 
 			return new ThemeDLS
 			{
 				SelectionBoxCol = new Color(1, 1, 1, 0.1f),
 				SelectionBoxMovingCol = new Color(1, 1, 1, 0.125f),
-				SelectionBoxInvalidCol = WithAlpha(MakeCol("#D65A5A"), 0.5f),
-				SelectionBoxOtherIsInvaldCol = WithAlpha(MakeCol("#EBC870"), 0.5f),
+				SelectionBoxInvalidCol = WithAlpha(MakeCol("#FF4040"), 0.5f),
+				SelectionBoxOtherIsInvaldCol = WithAlpha(MakeCol("#D6B77D"), 0.5f),
 				StateLowCol = stateLow,
 				StateHighCol = stateHigh,
 				StateHoverCol = stateHover,
-				StateDisconnectedCol = MakeCol("#858B93"),
-				DevPinHandle = MakeCol("#4C5059"),
-				DevPinHandleHighlighted = MakeCol("#4C8DFF"),
-				PinCol = MakeCol("#26292E"),
-				PinLabelCol = MakeCol("#A4ADB5"),
-				PinHighlightCol = MakeCol("#5B9FE3"),
-				PinInvalidCol = MakeCol("#D65A5A"),
+				StateDisconnectedCol = Color.white,
+				DevPinHandle = MakeCol("#34383F"),
+				DevPinHandleHighlighted = MakeCol("#00B8F0"),
+				PinCol = Color.black,
+				PinLabelCol = MakeCol("#AFB5BE"),
+				PinHighlightCol = MakeCol("#00B8F0"),
+				PinInvalidCol = MakeCol("#FF4040"),
 				SevenSegCols = new Color[]
 				{
-					MakeCol("#1C1E23"), MakeCol("#5B9FE3"), MakeCol("#4C8DFF"), // Col A: OFF, ON, HIGHLIGHT
-					MakeCol("#1C1E23"), MakeCol("#5B9FE3"), MakeCol("#4C8DFF") // Col B: OFF, ON, HIGHLIGHT
+					MakeCol("#17181B"), MakeCol("#00B8F0"), MakeCol("#00B8F0"), // Col A: OFF, ON, HIGHLIGHT
+					MakeCol("#17181B"), MakeCol("#00B8F0"), MakeCol("#00B8F0") // Col B: OFF, ON, HIGHLIGHT
 				},
-				BackgroundCol = MakeCol("#1C1E23"),
-				GridCol = MakeCol("#26292E"),
+				BackgroundCol = MakeCol("#101113"),
+				GridCol = Color.black,
 			};
 		}
 
 		static UIThemeDLS CreateUITheme()
 		{
-			FontType fontRegular = FontRegular;
-			FontType fontBold = FontBold;
+			FontType fontRegular = FontType.OpenSansRegular;
+			FontType fontBold = FontType.OpenSansBold;
 			float fontSizeRegular = UIThemeLibrary.FontSizeMedium;
 
-			Color primaryText = MakeCol("#F5F7FA");
-			Color secondaryText = MakeCol("#A4ADB5");
-			Color disabledText = MakeCol("#707780");
+			Color primaryText = MakeCol("#FFFFFF");
+			Color secondaryText = MakeCol("#AFB5BE");
+			Color disabledText = MakeCol("#767E89");
 
-			Color inactiveButtonCol = MakeCol("#26292E");
+			Color inactiveButtonCol = MakeCol("#1E2024");
 			Color inactiveTextol = disabledText;
-			Color chipLibaryButtonOff = MakeCol("#31343A");
-			Color chipLibaryButtonOn = MakeCol("#4C8DFF");
-			Color menuPanelCol = MakeCol("#26292E");
+			Color chipLibaryButtonOff = MakeCol("#282B30");
+			Color chipLibaryButtonOn = MakeCol("#00B8F0");
+			Color menuPanelCol = MakeCol("#1E2024");
 
-			Color chipLibraryCollectionHighlightCol = MakeCol("#6A9EFF");
-			Color chipLibraryChipHighlightCol = MakeCol("#5B9FE3");
+			Color chipLibraryCollectionHighlightCol = MakeCol("#55D2F7");
+			Color chipLibraryChipHighlightCol = MakeCol("#00B8F0");
 
-			Color scrollBarCol = MakeCol("#4C5059");
+			Color scrollBarCol = MakeCol("#34383F");
 
 			return new UIThemeDLS
 			{
@@ -122,54 +123,58 @@ namespace DLS.Graphics
 				MenuPanelCol = menuPanelCol,
 				MenuBackgroundOverlayCol = new Color(0, 0, 0, 0.85f),
 				// --- Buttons ---
-				ButtonTheme = MakeButtonTheme(fontRegular, MakeCol("#31343A"), MakeCol("#4C5059"), MakeCol("#4C8DFF"), primaryText, primaryText, primaryText),
-				ProjectSelectionButton = MakeButtonTheme(fontRegular, Color.clear, MakeCol("#31343A"), MakeCol("#4C8DFF"), primaryText, primaryText, primaryText),
-				ProjectSelectionButtonSelected = MakeButtonTheme(fontRegular, MakeCol("#4C8DFF"), MakeCol("#6A9EFF"), MakeCol("#5B9FE3"), MakeCol("#121417"), MakeCol("#121417"), MakeCol("#121417")),
-				ChipButton = MakeButtonTheme(fontRegular, MakeCol("#26292E"), MakeCol("#31343A"), MakeCol("#4C8DFF"), primaryText, primaryText, primaryText),
-				MainMenuButtonTheme = MakeButtonTheme(fontRegular, MakeCol("#31343A"), MakeCol("#4C8DFF"), MakeCol("#5B9FE3"), primaryText, primaryText, primaryText),
-				MenuButtonTheme = MakeButtonTheme(fontRegular, MakeCol("#26292E"), MakeCol("#4C8DFF"), MakeCol("#5B9FE3"), primaryText, primaryText, primaryText),
-				MenuPopupButtonTheme = MakeButtonThemeFull(fontRegular, MakeCol("#121417"), MakeCol("#31343A"), MakeCol("#4C5059"), inactiveButtonCol, primaryText, primaryText, primaryText, inactiveTextol),
+				ButtonTheme = MakeButtonTheme(fontRegular, MakeCol("#282B30"), MakeCol("#34383F"), MakeCol("#00B8F0"), primaryText, primaryText, primaryText),
+				ProjectSelectionButton = MakeButtonTheme(fontRegular, Color.clear, MakeCol("#282B30"), MakeCol("#00B8F0"), primaryText, primaryText, primaryText),
+				ProjectSelectionButtonSelected = MakeButtonTheme(fontRegular, MakeCol("#00B8F0"), MakeCol("#55D2F7"), MakeCol("#00B8F0"), MakeCol("#101113"), MakeCol("#101113"), MakeCol("#101113")),
+				ChipButton = MakeButtonTheme(fontRegular, MakeCol("#1E2024"), MakeCol("#282B30"), MakeCol("#00B8F0"), primaryText, primaryText, primaryText),
+				MainMenuButtonTheme = MakeButtonTheme(fontRegular, MakeCol("#282B30"), MakeCol("#00B8F0"), MakeCol("#00B8F0"), primaryText, primaryText, primaryText),
+				MenuButtonTheme = MakeButtonTheme(fontRegular, MakeCol("#1E2024"), MakeCol("#00B8F0"), MakeCol("#00B8F0"), primaryText, primaryText, primaryText),
+				MenuPopupButtonTheme = MakeButtonThemeFull(fontRegular, MakeCol("#101113"), MakeCol("#282B30"), MakeCol("#34383F"), inactiveButtonCol, primaryText, primaryText, primaryText, inactiveTextol),
 
-				ChipLibraryCollectionToggleOff = MakeButtonTheme(fontRegular, MakeCol("#31343A"), MakeCol("#4C5059"), chipLibraryCollectionHighlightCol, primaryText, primaryText, primaryText),
-				ChipLibraryCollectionToggleOn = MakeButtonThemeAuto(fontRegular, chipLibraryCollectionHighlightCol, MakeCol("#121417")),
-				ChipLibraryChipToggleOff = MakeButtonTheme(fontRegular, MakeCol("#26292E"), MakeCol("#4C5059"), chipLibraryChipHighlightCol, primaryText, primaryText, primaryText),
-				ChipLibraryChipToggleOn = MakeButtonThemeAuto(fontRegular, chipLibraryChipHighlightCol, MakeCol("#121417")),
+				ChipLibraryCollectionToggleOff = MakeButtonTheme(fontRegular, MakeCol("#282B30"), MakeCol("#34383F"), chipLibraryCollectionHighlightCol, primaryText, primaryText, primaryText),
+				ChipLibraryCollectionToggleOn = MakeButtonThemeAuto(fontRegular, chipLibraryCollectionHighlightCol, MakeCol("#101113")),
+				ChipLibraryChipToggleOff = MakeButtonTheme(fontRegular, MakeCol("#1E2024"), MakeCol("#34383F"), chipLibraryChipHighlightCol, primaryText, primaryText, primaryText),
+				ChipLibraryChipToggleOn = MakeButtonThemeAuto(fontRegular, chipLibraryChipHighlightCol, MakeCol("#101113")),
+				
+				// Search result themes - neutral background for normal results, accent for selected
+				SearchResultNormal = MakeButtonTheme(fontRegular, MakeCol("#1E2024"), MakeCol("#282B30"), MakeCol("#34383F"), primaryText, primaryText, primaryText),
+				SearchResultSelected = MakeButtonThemeAuto(fontRegular, chipLibraryChipHighlightCol, MakeCol("#101113")),
 
 				// --- Other stuff ---
 				ChipNameInputField = new InputFieldTheme
 				{
-					font = fontBold,
+					font = FontType.JetbrainsMonoBold,
 					fontSize = UIThemeLibrary.FontSizeVeryLarge,
-					bgCol = MakeCol("#1C1E23"),
+					bgCol = MakeCol("#17181B"),
 					defaultTextCol = secondaryText,
 					textCol = primaryText,
-					focusBorderCol = MakeCol("#4C8DFF")
+					focusBorderCol = MakeCol("#00B8F0")
 				},
 				OptionsWheel = new WheelSelectorTheme
 				{
-					backgroundCol = MakeCol("#26292E"),
-					buttonTheme = MakeButtonTheme(fontBold, MakeCol("#31343A"), MakeCol("#4C8DFF"), MakeCol("#5B9FE3"), primaryText, primaryText, primaryText),
+					backgroundCol = MakeCol("#1E2024"),
+					buttonTheme = MakeButtonTheme(fontBold, MakeCol("#282B30"), MakeCol("#00B8F0"), MakeCol("#00B8F0"), primaryText, primaryText, primaryText),
 					textCol = primaryText,
 					inactiveTextCol = secondaryText
 				},
 				ScrollTheme = new ScrollViewTheme
 				{
-					backgroundCol = MakeCol("#121417"),
+					backgroundCol = MakeCol("#101113"),
 					padding = 1,
-					scrollBarColBackground = MakeCol("#26292E"),
-					scrollBarColInactive = MakeCol("#31343A"),
-					scrollBarColNormal = MakeCol("#4C5059"),
-					scrollBarColHover = MakeCol("#4C8DFF"),
-					scrollBarColPressed = MakeCol("#5B9FE3"),
+					scrollBarColBackground = MakeCol("#1E2024"),
+					scrollBarColInactive = MakeCol("#282B30"),
+					scrollBarColNormal = MakeCol("#34383F"),
+					scrollBarColHover = MakeCol("#00B8F0"),
+					scrollBarColPressed = MakeCol("#00B8F0"),
 					scrollBarWidth = 1
 				},
 				CheckBoxTheme = new CheckboxTheme
 				{
 					boxCol = primaryText,
-					tickCol = MakeCol("#1C1E23")
+					tickCol = MakeCol("#17181B")
 				},
-				InfoBarCol = WithAlpha(MakeCol("#121417"), 0.9f),
-				StarredBarCol = MakeCol("#31343A")
+				InfoBarCol = WithAlpha(MakeCol("#101113"), 0.9f),
+				StarredBarCol = MakeCol("#282B30")
 			};
 
 			ButtonTheme MakeButtonThemeAuto(FontType font, Color colNormal, Color textCol)
@@ -229,6 +234,8 @@ namespace DLS.Graphics
 			public ButtonTheme ChipLibraryChipToggleOn;
 			public ButtonTheme ChipLibraryCollectionToggleOff;
 			public ButtonTheme ChipLibraryCollectionToggleOn;
+			public ButtonTheme SearchResultNormal;
+			public ButtonTheme SearchResultSelected;
 
 			public InputFieldTheme ChipNameInputField;
 			public FontType FontBold;

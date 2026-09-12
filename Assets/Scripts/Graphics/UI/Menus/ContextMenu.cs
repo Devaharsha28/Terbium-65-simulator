@@ -270,8 +270,8 @@ namespace DLS.Graphics
 			const float textOffsetX = 0.45f;
 			ButtonTheme theme = DrawSettings.ActiveUITheme.MenuPopupButtonTheme;
 			ButtonTheme headerTheme = DrawSettings.ActiveUITheme.MenuPopupButtonTheme;
-			headerTheme.buttonCols.inactive = ColHelper.MakeCol(0.18f);
-			headerTheme.textCols.inactive = Color.white;
+			headerTheme.buttonCols.inactive = ThemePalette.Parse(ThemeManager.ActivePalette.PanelElevated);
+			headerTheme.textCols.inactive = ThemePalette.Parse(ThemeManager.ActivePalette.TextPrimary);
 
 			float menuWidth = Draw.CalculateTextBoundsSize(menuEntries[0].Text, theme.fontSize, theme.font).x + 1;
 			float menuWidthHeader = Draw.CalculateTextBoundsSize(contextMenuHeader, theme.fontSize, theme.font).x + 1;
@@ -303,7 +303,7 @@ namespace DLS.Graphics
 					if (entry.Text == menuDividerString)
 					{
 						pos.y += 0.5f * dirY;
-						UI.DrawPanel(pos, new Vector2(menuWidth, 0.15f), ColHelper.MakeCol(0.6f), Anchor.CentreLeft);
+						UI.DrawPanel(pos, new Vector2(menuWidth, 0.15f), ThemePalette.Parse(ThemeManager.ActivePalette.Border), Anchor.CentreLeft);
 						pos.y += 0.5f * dirY;
 					}
 					else
@@ -321,7 +321,7 @@ namespace DLS.Graphics
 
 				Bounds2D bounds = UI.GetCurrentBoundsScope();
 				Vector2 menuSize = new(menuWidth, bounds.Height);
-				UI.ModifyPanel(panelID, bounds.Centre, menuSize + Vector2.one * 0.5f, ColHelper.MakeCol(0.91f));
+				UI.ModifyPanel(panelID, bounds.Centre, menuSize + Vector2.one * 0.5f, ThemePalette.Parse(ThemeManager.ActivePalette.Border));
 			}
 
 			wasMouseOverMenu = UI.MouseInsideBounds(UI.PrevBounds);

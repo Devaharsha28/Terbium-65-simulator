@@ -87,7 +87,7 @@ namespace DLS.Graphics
 
 			const int inputTextPad = 1;
 			const float headerSpacing = 1.5f;
-			Color labelCol = Color.white;
+			Color labelCol = ThemePalette.Parse(ThemeManager.ActivePalette.TextPrimary);
 			Color headerCol = new(0.46f, 1, 0.54f);
 			Vector2 topLeft = UI.Centre + new Vector2(-menuWidth / 2, verticalOffset);
 			Vector2 labelPosCurr = topLeft;
@@ -112,7 +112,7 @@ namespace DLS.Graphics
 				AddSpacing();
 				// Draw current simulation speed
 				Vector2 tickLabelRight = MenuHelper.DrawLabelSectionOfLabelInputPair(labelPosCurr, entrySize, "Steps per second (current)", labelCol * 0.75f, true);
-				UI.DrawPanel(tickLabelRight, settingFieldSize, new Color(0.18f, 0.18f, 0.18f), Anchor.CentreRight);
+				UI.DrawPanel(tickLabelRight, settingFieldSize, ThemePalette.Parse(ThemeManager.ActivePalette.Workspace), Anchor.CentreRight);
 				UI.DrawText(currentSimSpeedString, theme.FontBold, theme.FontSizeRegular, tickLabelRight + new Vector2(inputTextPad - settingFieldSize.x, 0), Anchor.TextCentreLeft, currentSimSpeedStringColour);
 
 				// Draw cancel/confirm buttons
@@ -267,19 +267,19 @@ namespace DLS.Graphics
 
 			if (Project.ActiveProject.simPaused)
 			{
-				frequencyErrorCol = new Color(1, 1, 1, 0.35f);
+				frequencyErrorCol = ThemePalette.Parse(ThemeManager.ActivePalette.TextSecondary);
 			}
 			else
 			{
 				int simFreqError = Mathf.RoundToInt(Project.ActiveProject.targetTicksPerSecond - (float)Project.ActiveProject.simAvgTicksPerSec);
-				if (simFreqError > 10) frequencyErrorCol = new Color(0.95f, 0.25f, 0.13f);
-				else if (simFreqError > 5) frequencyErrorCol = new Color(1, 0.38f, 0.27f);
-				else if (simFreqError > 2) frequencyErrorCol = new Color(1, 0.7f, 0.27f);
+				if (simFreqError > 10) frequencyErrorCol = ThemePalette.Parse(ThemeManager.ActivePalette.Error);
+				else if (simFreqError > 5) frequencyErrorCol = ThemePalette.Parse(ThemeManager.ActivePalette.Warning);
+				else if (simFreqError > 2) frequencyErrorCol = ThemePalette.Parse(ThemeManager.ActivePalette.Warning);
 			}
 
 			return frequencyErrorCol;
 		}
 
-		static string CreateShortcutString(string s) => UI.CreateColouredText("  " +s, new Color(1, 1, 1, 0.3f));
+		static string CreateShortcutString(string s) => UI.CreateColouredText("  " +s, ThemePalette.Parse(ThemeManager.ActivePalette.TextSecondary));
 	}
 }

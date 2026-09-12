@@ -24,7 +24,7 @@ namespace DLS.Graphics
 				Draw.ID panelID = UI.ReservePanel();
 				Draw.ID textBGPanelID = UI.ReservePanel();
 				UI.DrawText(text, DrawSettings.ActiveUITheme.FontRegular, DrawSettings.ActiveUITheme.FontSizeRegular, textPos, Anchor.TextCentre, textCol);
-				UI.ModifyPanel(textBGPanelID, Bounds2D.Grow(UI.PrevBounds, 1.5f), ColHelper.MakeCol(0.11f));
+				UI.ModifyPanel(textBGPanelID, Bounds2D.Grow(UI.PrevBounds, 1.5f), ThemePalette.Parse(ThemeManager.ActivePalette.Workspace));
 
 				Vector2 topLeft = UI.PrevBounds.BottomLeft + Vector2.down * 1;
 				MenuHelper.CancelConfirmResult button = MenuHelper.DrawCancelConfirmButtons(topLeft, UI.PrevBounds.Width, false);
