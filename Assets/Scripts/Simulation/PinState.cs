@@ -2,52 +2,42 @@ namespace DLS.Simulation
 {
 	// Helper class for dealing with pin state.
 	// Pin state is stored as a uint32, with format:
-	// Tristate flags (most significant 16 bits) | Bit states (least significant 16 bits)
+	// Logic: bits 0..17 (two per trit). Disconnected: bits 18..26.
 	public static class PinState
 	{
-		// Each bit has three possible states (tri-state logic):
-		public const ushort LogicLow = 0;
-		public const ushort LogicHigh = 1;
-		public const ushort LogicDisconnected = 2;
-
 		// Mask for single trit value (2 logic bits, and 1 tristate flag)
-		public const uint SingleTritMask = 3u | (1u << 16);
+		public const uint SingleTritMask = 3u | (1u << 18);
 		
-		public static ushort GetBitStates(uint state) => (ushort)state;
-		public static ushort GetTristateFlags(uint state) => (ushort)(state >> 16);
+		public static uint GetBitStates(uint state) => state & 0x3FFFFu; // Bottom 18 bits
+		public static uint GetTristateFlags(uint state) => (state >> 18) & 0x1FFu;
 
-		public static void Set(ref uint state, ushort bitStates, ushort tristateFlags)
+		public static void Set(ref uint state, uint bitStates, uint tristateFlags)
 		{
-			state = (uint)(bitStates | (tristateFlags << 16));
+			state = (bitStates & 0x3FFFFu) | ((tristateFlags & 0x1FFu) << 18);
 		}
 
 		public static void Set(ref uint state, uint other) => state = other;
 
 		public static bool FirstBitHigh(uint state) => !IsTritAtIndexDisconnected(state, 0) && GetTritAtIndex(state, 0) == TritPositive;
 
-		public static void Set4BitFrom8BitSource(ref uint state, uint source8bit, bool firstNibble)
+		public static void Set3TritFrom9TritSource(ref uint state, uint source9trit, int groupIndex)
 		{
-			ushort sourceBitStates = GetBitStates(source8bit);
-			ushort sourceTristateFlags = GetTristateFlags(source8bit);
+			uint sourceBitStates = GetBitStates(source9trit);
+			uint sourceTristateFlags = GetTristateFlags(source9trit);
 
-			if (firstNibble)
-			{
-				const ushort logicMask = 0b11111111; // 8 bits (4 trits)
-				const ushort flagMask = 0b1111;      // 4 bits (4 flags)
-				Set(ref state, (ushort)(sourceBitStates & logicMask), (ushort)(sourceTristateFlags & flagMask));
-			}
-			else
-			{
-				const ushort logicMask = 0b1111111100000000;
-				const ushort flagMask = 0b11110000;
-				Set(ref state, (ushort)((sourceBitStates & logicMask) >> 8), (ushort)((sourceTristateFlags & flagMask) >> 4));
-			}
+			// groupIndex 0: bottom 3 trits (6 logic bits, 3 flag bits)
+			// groupIndex 1: middle 3 trits
+			// groupIndex 2: top 3 trits
+			uint logicMask = 0b111111u << (groupIndex * 6);
+			uint flagMask = 0b111u << (groupIndex * 3);
+
+			Set(ref state, (sourceBitStates & logicMask) >> (groupIndex * 6), (sourceTristateFlags & flagMask) >> (groupIndex * 3));
 		}
 
-		public static void Set8BitFrom4BitSources(ref uint state, uint a, uint b)
+		public static void Set9TritFrom3TritSources(ref uint state, uint a, uint b, uint c)
 		{
-			ushort bitStates = (ushort)(GetBitStates(a) | (GetBitStates(b) << 8));
-			ushort tristateFlags = (ushort)((GetTristateFlags(a) & 0b1111) | ((GetTristateFlags(b) & 0b1111) << 4));
+			uint bitStates = (GetBitStates(a) & 63u) | ((GetBitStates(b) & 63u) << 6) | ((GetBitStates(c) & 63u) << 12);
+			uint tristateFlags = (GetTristateFlags(a) & 0b111) | ((GetTristateFlags(b) & 0b111) << 3) | ((GetTristateFlags(c) & 0b111) << 6);
 			Set(ref state, bitStates, tristateFlags);
 		}
 
@@ -65,7 +55,7 @@ namespace DLS.Simulation
 			SetTritAtIndex(ref state, tritIndex, nextTrit);
 		}
 
-		public static void SetAllDisconnected(ref uint state) => Set(ref state, 0, ushort.MaxValue);
+		public static void SetAllDisconnected(ref uint state) => state |= 0x1FFu << 18;
 
 		// ---- Ternary (Balanced Ternary) Representation ----
 		// For single-trit operation, we use sbyte representation:
@@ -138,7 +128,7 @@ namespace DLS.Simulation
 		public static void SetTritAtIndex(ref uint state, int tritIndex, sbyte trit)
 		{
 			uint logicShift = (uint)(tritIndex * 2);
-			uint flagShift = (uint)(16 + tritIndex);
+			uint flagShift = (uint)(18 + tritIndex);
 			
 			// Clear the logic bits and the disconnected flag
 			state &= ~( (3u << (int)logicShift) | (1u << (int)flagShift) );
@@ -148,13 +138,13 @@ namespace DLS.Simulation
 
 		public static bool IsTritAtIndexDisconnected(uint state, int tritIndex)
 		{
-			uint flagShift = (uint)(16 + tritIndex);
+			uint flagShift = (uint)(18 + tritIndex);
 			return (state & (1u << (int)flagShift)) != 0;
 		}
 
 		public static void SetTritAtIndexDisconnected(ref uint state, int tritIndex)
 		{
-			uint flagShift = (uint)(16 + tritIndex);
+			uint flagShift = (uint)(18 + tritIndex);
 			state |= (1u << (int)flagShift);
 		}
 
@@ -169,6 +159,66 @@ namespace DLS.Simulation
 				weight *= 3;
 			}
 			return displayValue;
+		}
+
+		public static bool HasDisconnectedTrit(uint state, int count) =>
+			(GetTristateFlags(state) & ((1u << count) - 1)) != 0;
+
+		public static int FormatTernary(uint state, int count, char[] buffer)
+		{
+			for (int i = 0; i < count; i++)
+			{
+				int index = count - 1 - i;
+				buffer[i] = IsTritAtIndexDisconnected(state, index) ? 'Z' :
+					GetTritAtIndex(state, index) < 0 ? '-' : GetTritAtIndex(state, index) > 0 ? '+' : '0';
+			}
+			return count;
+		}
+
+		// Encode a signed nine-trit value; packed zero is -9841, not numeric zero.
+		public static uint FromDecimal9(int value)
+		{
+			if (value < -9841 || value > 9841) throw new System.ArgumentOutOfRangeException(nameof(value));
+			uint state = 0;
+			int digits = value + 9841;
+			for (int i = 0; i < 9; i++, digits /= 3) SetTritAtIndex(ref state, i, (sbyte)(digits % 3 - 1));
+			return state;
+		}
+
+		public static uint[] CreateRom9Data(uint[] source = null)
+		{
+			uint[] data = new uint[19683];
+			for (int i = 0; i < data.Length; i++) data[i] = FromDecimal9(0);
+			if (source != null) System.Array.Copy(source, data, System.Math.Min(source.Length, data.Length));
+			return data;
+		}
+
+		public static int FormatGrouped(uint state, int count, int groupSize, char[] buffer)
+		{
+			if (groupSize != 2 && groupSize != 3) throw new System.ArgumentOutOfRangeException(nameof(groupSize));
+			int groups = (count + groupSize - 1) / groupSize;
+			int length = 0;
+			for (int g = groups - 1; g >= 0; g--)
+			{
+				if (groupSize == 3 && g != groups - 1) buffer[length++] = ' ';
+				int value = 0, weight = 1;
+				bool disconnected = false;
+				for (int i = 0; i < groupSize; i++, weight *= 3)
+				{
+					int index = g * groupSize + i;
+					if (index >= count) continue; // Pad missing high trits with numeric zero.
+					value += GetTritAtIndex(state, index) * weight;
+					disconnected |= IsTritAtIndexDisconnected(state, index);
+				}
+				if (disconnected) buffer[length++] = '?';
+				else if (value < 0) buffer[length++] = (char)('a' + (-value - 1));
+				else
+				{
+					if (value >= 10) buffer[length++] = '1';
+					buffer[length++] = (char)('0' + value % 10);
+				}
+			}
+			return length;
 		}
 	}
 }

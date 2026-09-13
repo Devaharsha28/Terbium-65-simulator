@@ -190,7 +190,7 @@ namespace DLS.Graphics
 
 
 		static readonly string versionString =
-			"v0.1.0";
+			"v1.0.0";
 
 
 		static string SelectedProjectName =>

@@ -24,9 +24,10 @@ namespace DLS.Graphics
 		static readonly string[] PinDecimalDisplayOptions =
 		{
 			"Off",
-			"Unsigned",
-			"Signed",
-			"HEX"
+			"Ternary",
+			"Decimal",
+			"Nonary",
+			"Hept"
 		};
 
 		public static void OnMenuOpened()
@@ -60,12 +61,12 @@ namespace DLS.Graphics
 				string newName = inputFieldState.text;
 
 				// Draw value display options
-				if (devPin.BitCount != PinBitCount.Bit1)
+				if (devPin.BitCount != PinTritCount.Trit1)
 				{
 					const float wheelWidth = 15.2f;
 
 					Vector2 topLeftCurr = UI.PrevBounds.BottomLeft + Vector2.down * spacing;
-					MenuHelper.LabeledOptionsWheel("Decimal Display", ThemePalette.Parse(ThemeManager.ActivePalette.TextPrimary), topLeftCurr, new Vector2(inputFieldBounds.Width, DrawSettings.SelectorWheelHeight), ID_ValueDisplayMode, PinDecimalDisplayOptions, wheelWidth, true);
+					MenuHelper.LabeledOptionsWheel("Representation", ThemePalette.Parse(ThemeManager.ActivePalette.TextPrimary), topLeftCurr, new Vector2(inputFieldBounds.Width, DrawSettings.SelectorWheelHeight), ID_ValueDisplayMode, PinDecimalDisplayOptions, wheelWidth, true);
 				}
 
 				// Draw cancel/confirm buttons
@@ -84,7 +85,7 @@ namespace DLS.Graphics
 		{
 			devPin.Pin.Name = newName;
 
-			if (devPin.BitCount != PinBitCount.Bit1)
+			if (devPin.BitCount != PinTritCount.Trit1)
 			{
 				devPin.pinValueDisplayMode = (PinValueDisplayMode)UI.GetWheelSelectorState(ID_ValueDisplayMode).index;
 			}

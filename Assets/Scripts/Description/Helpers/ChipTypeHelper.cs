@@ -10,6 +10,31 @@ namespace DLS.Description
 		static readonly Dictionary<ChipType, string> Names = new()
 		{
 			// ---- Basic Chips ----
+			{ ChipType.Buf, "BUF" },
+			{ ChipType.PNot, "PNOT" },
+			{ ChipType.NNot, "NNOT" },
+			{ ChipType.Abs, "ABS" },
+			{ ChipType.Clu, "CLU" },
+			{ ChipType.Cld, "CLD" },
+			{ ChipType.Inc, "INC" },
+			{ ChipType.Dec, "DEC" },
+			{ ChipType.Rtu, "RTU" },
+			{ ChipType.Rtd, "RTD" },
+			{ ChipType.Isp, "ISP" },
+			{ ChipType.Isz, "ISZ" },
+			{ ChipType.Isn, "ISN" },
+			{ ChipType.And, "AND" },
+			{ ChipType.Or, "OR" },
+			{ ChipType.Nor, "NOR" },
+			{ ChipType.Cons, "CONS" },
+			{ ChipType.NCons, "NCONS" },
+			{ ChipType.Any, "ANY" },
+			{ ChipType.NAny, "NANY" },
+			{ ChipType.Mul, "MUL" },
+			{ ChipType.NMul, "NMUL" },
+			{ ChipType.Sum, "SUM" },
+			{ ChipType.NSum, "NSUM" },
+			{ ChipType.Rom_19683x9, "ROM 19683x9" },
 			{ ChipType.Nand, "NAND" },
 			{ ChipType.Not, "NOT" },
 			{ ChipType.Min, "MIN" },
@@ -21,12 +46,12 @@ namespace DLS.Description
 			{ ChipType.dev_Ram_8Bit, "dev.RAM-8" },
 			{ ChipType.Rom_256x16, $"ROM 256{mulSymbol}16" },
 			// ---- Split / Merge ----
-			{ ChipType.Split_4To1Bit, "4-1BIT" },
-			{ ChipType.Split_8To1Bit, "8-1BIT" },
-			{ ChipType.Split_8To4Bit, "8-4BIT" },
-			{ ChipType.Merge_4To8Bit, "4-8BIT" },
-			{ ChipType.Merge_1To8Bit, "1-8BIT" },
-			{ ChipType.Merge_1To4Bit, "1-4BIT" },
+			{ ChipType.Split_3To1Trit, "3-1TRIT" },
+			{ ChipType.Split_9To1Trit, "9-1TRIT" },
+			{ ChipType.Split_9To3Trit, "9-3TRIT" },
+			{ ChipType.Merge_3To9Trit, "3-9TRIT" },
+			{ ChipType.Merge_1To9Trit, "1-9TRIT" },
+			{ ChipType.Merge_1To3Trit, "1-3TRIT" },
 
 			// ---- Displays -----
 			{ ChipType.DisplayRGB, "RGB DISPLAY" },
@@ -39,76 +64,76 @@ namespace DLS.Description
 			// ---- Not really chips (but convenient to treat them as such anyway) ----
 
 			// ---- Inputs/Outputs ----
-			{ ChipType.In_1Bit, "IN-1" },
-			{ ChipType.In_4Bit, "IN-4" },
-			{ ChipType.In_8Bit, "IN-8" },
-			{ ChipType.Out_1Bit, "OUT-1" },
-			{ ChipType.Out_4Bit, "OUT-4" },
-			{ ChipType.Out_8Bit, "OUT-8" },
+			{ ChipType.In_1Trit, "IN-1" },
+			{ ChipType.In_3Trit, "IN-3" },
+			{ ChipType.In_9Trit, "IN-9" },
+			{ ChipType.Out_1Trit, "OUT-1" },
+			{ ChipType.Out_3Trit, "OUT-3" },
+			{ ChipType.Out_9Trit, "OUT-9" },
 			{ ChipType.Key, "KEY" },
 			// ---- Buses ----
-			{ ChipType.Bus_1Bit, "BUS-1" },
-			{ ChipType.Bus_4Bit, "BUS-4" },
-			{ ChipType.Bus_8Bit, "BUS-8" },
-			{ ChipType.BusTerminus_1Bit, "BUS-TERMINUS-1" },
-			{ ChipType.BusTerminus_4Bit, "BUS-TERMINUS-4" },
-			{ ChipType.BusTerminus_8Bit, "BUS-TERMINUS-8" }
+			{ ChipType.Bus_1Trit, "BUS-1" },
+			{ ChipType.Bus_3Trit, "BUS-3" },
+			{ ChipType.Bus_9Trit, "BUS-9" },
+			{ ChipType.BusTerminus_1Trit, "BUS-TERMINUS-1" },
+			{ ChipType.BusTerminus_3Trit, "BUS-TERMINUS-3" },
+			{ ChipType.BusTerminus_9Trit, "BUS-TERMINUS-9" }
 		};
 
 		public static string GetName(ChipType type) => Names[type];
 
 		public static bool IsBusType(ChipType type) => IsBusOriginType(type) || IsBusTerminusType(type);
 
-		public static bool IsBusOriginType(ChipType type) => type is ChipType.Bus_1Bit or ChipType.Bus_4Bit or ChipType.Bus_8Bit;
+		public static bool IsBusOriginType(ChipType type) => type is ChipType.Bus_1Trit or ChipType.Bus_3Trit or ChipType.Bus_9Trit;
 
-		public static bool IsBusTerminusType(ChipType type) => type is ChipType.BusTerminus_1Bit or ChipType.BusTerminus_4Bit or ChipType.BusTerminus_8Bit;
+		public static bool IsBusTerminusType(ChipType type) => type is ChipType.BusTerminus_1Trit or ChipType.BusTerminus_3Trit or ChipType.BusTerminus_9Trit;
 
-		public static bool IsRomType(ChipType type) => type == ChipType.Rom_256x16;
+		public static bool IsRomType(ChipType type) => type is ChipType.Rom_256x16 or ChipType.Rom_19683x9;
 
 		public static ChipType GetCorrespondingBusTerminusType(ChipType type)
 		{
 			return type switch
 			{
-				ChipType.Bus_1Bit => ChipType.BusTerminus_1Bit,
-				ChipType.Bus_4Bit => ChipType.BusTerminus_4Bit,
-				ChipType.Bus_8Bit => ChipType.BusTerminus_8Bit,
+				ChipType.Bus_1Trit => ChipType.BusTerminus_1Trit,
+				ChipType.Bus_3Trit => ChipType.BusTerminus_3Trit,
+				ChipType.Bus_9Trit => ChipType.BusTerminus_9Trit,
 				_ => throw new Exception("No corresponding bus terminus found for type: " + type)
 			};
 		}
 
-		public static ChipType GetPinType(bool isInput, PinBitCount numBits)
+		public static ChipType GetPinType(bool isInput, PinTritCount numBits)
 		{
 			if (isInput)
 			{
 				return numBits switch
 				{
-					PinBitCount.Bit1 => ChipType.In_1Bit,
-					PinBitCount.Bit4 => ChipType.In_4Bit,
-					PinBitCount.Bit8 => ChipType.In_8Bit,
-					_ => throw new Exception("No input pin type found for bitcount: " + numBits)
+					PinTritCount.Trit1 => ChipType.In_1Trit,
+					PinTritCount.Trit3 => ChipType.In_3Trit,
+					PinTritCount.Trit9 => ChipType.In_9Trit,
+					_ => throw new Exception("No input pin type found for tritcount: " + numBits)
 				};
 			}
 
 			return numBits switch
 			{
-				PinBitCount.Bit1 => ChipType.Out_1Bit,
-				PinBitCount.Bit4 => ChipType.Out_4Bit,
-				PinBitCount.Bit8 => ChipType.Out_8Bit,
-				_ => throw new Exception("No output pin type found for bitcount: " + numBits)
+				PinTritCount.Trit1 => ChipType.Out_1Trit,
+				PinTritCount.Trit3 => ChipType.Out_3Trit,
+				PinTritCount.Trit9 => ChipType.Out_9Trit,
+				_ => throw new Exception("No output pin type found for tritcount: " + numBits)
 			};
 		}
 
-		public static (bool isInput, bool isOutput, PinBitCount numBits) IsInputOrOutputPin(ChipType type)
+		public static (bool isInput, bool isOutput, PinTritCount numBits) IsInputOrOutputPin(ChipType type)
 		{
 			return type switch
 			{
-				ChipType.In_1Bit => (true, false, PinBitCount.Bit1),
-				ChipType.Out_1Bit => (false, true, PinBitCount.Bit1),
-				ChipType.In_4Bit => (true, false, PinBitCount.Bit4),
-				ChipType.Out_4Bit => (false, true, PinBitCount.Bit4),
-				ChipType.In_8Bit => (true, false, PinBitCount.Bit8),
-				ChipType.Out_8Bit => (false, true, PinBitCount.Bit8),
-				_ => (false, false, PinBitCount.Bit1)
+				ChipType.In_1Trit => (true, false, PinTritCount.Trit1),
+				ChipType.Out_1Trit => (false, true, PinTritCount.Trit1),
+				ChipType.In_3Trit => (true, false, PinTritCount.Trit3),
+				ChipType.Out_3Trit => (false, true, PinTritCount.Trit3),
+				ChipType.In_9Trit => (true, false, PinTritCount.Trit9),
+				ChipType.Out_9Trit => (false, true, PinTritCount.Trit9),
+				_ => (false, false, PinTritCount.Trit1)
 			};
 		}
 	}

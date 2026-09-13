@@ -165,7 +165,8 @@ namespace DLS.Graphics
 			t.StateLowCol                    = stateLow;
 			t.StateHighCol                   = stateHigh;
 			t.StateHoverCol                  = stateHover;
-			t.StateDisconnectedCol           = tritZero;
+			t.StateZeroCol                   = Enumerable.Repeat(tritZero, 8).ToArray();
+			t.StateDisconnectedCol           = textDisabled;
 			t.SelectionBoxCol                = new Color(1, 1, 1, 0.1f);
 			t.SelectionBoxMovingCol          = new Color(1, 1, 1, 0.125f);
 			t.SelectionBoxInvalidCol         = WithAlpha(error, 0.5f);

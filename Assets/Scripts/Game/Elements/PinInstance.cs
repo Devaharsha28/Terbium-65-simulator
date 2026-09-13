@@ -10,7 +10,7 @@ namespace DLS.Game
 	{
 		public readonly PinAddress Address;
 
-		public readonly PinBitCount bitCount;
+		public readonly PinTritCount bitCount;
 		public readonly bool IsBusPin;
 		public readonly bool IsSourcePin;
 
@@ -27,7 +27,7 @@ namespace DLS.Game
 		public PinInstance(PinDescription desc, PinAddress address, IMoveable parent, bool isSourcePin)
 		{
 			this.parent = parent;
-			bitCount = desc.BitCount;
+			bitCount = desc.TritCount;
 			Name = desc.Name;
 			Address = address;
 			IsSourcePin = isSourcePin;
@@ -70,14 +70,14 @@ namespace DLS.Game
 
 		public Color GetStateCol(int tritIndex, bool hover = false, bool canUsePlayerState = true)
 		{
-			uint pinState = (IsSourcePin && canUsePlayerState) ? PlayerInputState : State; // dev input pin uses player state (so it updates even when sim is paused)
+			uint pinState = (parent is DevPinInstance dev && dev.IsInputPin && canUsePlayerState) ? PlayerInputState : State; // dev input pin uses player state (so it updates even when sim is paused)
 			
 			if (PinState.IsTritAtIndexDisconnected(pinState, tritIndex)) 
 				return DrawSettings.ActiveTheme.StateDisconnectedCol;
 			
 			sbyte tritValue = PinState.GetTritAtIndex(pinState, tritIndex);
 			
-			// Map ternary values to colors: -1 = red (low), 0 = gray (zero), +1 = blue (high)
+			// Theme colors distinguish negative, zero, positive and disconnected.
 			Color baseCol = tritValue switch
 			{
 				PinState.TritNegative => DrawSettings.ActiveTheme.StateLowCol[(int)Colour],

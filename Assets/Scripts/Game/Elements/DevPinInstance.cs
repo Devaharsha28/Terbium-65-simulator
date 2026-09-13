@@ -10,7 +10,7 @@ namespace DLS.Game
 {
 	public class DevPinInstance : IMoveable
 	{
-		public readonly PinBitCount BitCount;
+		public readonly PinTritCount BitCount;
 		public readonly char[] decimalDisplayCharBuffer = new char[16];
 
 		// Size/Layout info
@@ -30,7 +30,7 @@ namespace DLS.Game
 			ID = pinDescription.ID;
 			IsInputPin = isInput;
 			Position = pinDescription.Position;
-			BitCount = pinDescription.BitCount;
+			BitCount = pinDescription.TritCount;
 
 			Pin = new PinInstance(pinDescription, new PinAddress(ID, 0), this, isInput);
 			pinValueDisplayMode = pinDescription.ValueDisplayMode;
@@ -45,14 +45,14 @@ namespace DLS.Game
 			faceDir = new Vector2(IsInputPin ? 1 : -1, 0);
 			StateGridDimensions = BitCount switch
 			{
-				PinBitCount.Bit1 => new Vector2Int(1, 1),
-				PinBitCount.Bit4 => new Vector2Int(2, 2),
-				PinBitCount.Bit8 => new Vector2Int(4, 2),
+				PinTritCount.Trit1 => new Vector2Int(1, 1),
+				PinTritCount.Trit3 => new Vector2Int(1, 3),
+				PinTritCount.Trit9 => new Vector2Int(3, 3),
 				_ => throw new Exception("Bit count not implemented")
 			};
 			StateGridSize = BitCount switch
 			{
-				PinBitCount.Bit1 => Vector2.one * (DevPinStateDisplayRadius * 2 + DevPinStateDisplayOutline * 2),
+				PinTritCount.Trit1 => Vector2.one * (DevPinStateDisplayRadius * 2 + DevPinStateDisplayOutline * 2),
 				_ => (Vector2)StateGridDimensions * MultiBitPinStateDisplaySquareSize + Vector2.one * DevPinStateDisplayOutline
 			};
 		}
@@ -64,7 +64,7 @@ namespace DLS.Game
 		{
 			get
 			{
-				int gridDst = BitCount is PinBitCount.Bit1 or PinBitCount.Bit4 ? 6 : 9;
+				int gridDst = BitCount is PinTritCount.Trit1 or PinTritCount.Trit3 ? 6 : 9;
 				return HandlePosition + faceDir * (GridSize * gridDst);
 			}
 		}
@@ -94,15 +94,29 @@ namespace DLS.Game
 
 		public int GetStateDecimalDisplayValue()
 		{
-			uint state = Pin.State; // Use the actual resolved sim state for display
+			uint state = DisplayState;
 			int numTrits = BitCount switch
 			{
-				PinBitCount.Bit1 => 1,
-				PinBitCount.Bit4 => 4,
-				PinBitCount.Bit8 => 8,
+				PinTritCount.Trit1 => 1,
+				PinTritCount.Trit3 => 3,
+				PinTritCount.Trit9 => 9,
 				_ => 1
 			};
 			return PinState.GetTernaryDecimalValue(state, numTrits);
+		}
+
+		public uint DisplayState => IsInputPin && Project.ActiveProject.CanEditViewedChip ? Pin.PlayerInputState : Pin.State;
+
+		public int CreateTernaryString(char[] buffer) => PinState.FormatTernary(DisplayState, (int)BitCount, buffer);
+		public int CreateGroupedString(char[] buffer, int groupSize) => PinState.FormatGrouped(DisplayState, (int)BitCount, groupSize, buffer);
+
+		// MSB at top left; rendering and hit-testing share these exact positions.
+		public int GetCellTritIndex(int column, int row) => (int)BitCount - 1 - (row * StateGridDimensions.x + column);
+		public Vector2 GetCellCentre(int column, int row)
+		{
+			Vector2 size = (Vector2)StateGridDimensions * MultiBitPinStateDisplaySquareSize;
+			return StateDisplayPosition + new Vector2(-size.x / 2, size.y / 2) +
+				MultiBitPinStateDisplaySquareSize * new Vector2(column + 0.5f, -row - 0.5f);
 		}
 
 		Bounds2D CreateBoundingBox(float pad)
@@ -125,7 +139,7 @@ namespace DLS.Game
 
 		public void ToggleState(int bitIndex)
 		{
-			if (IsInputPin)
+			if (IsInputPin && bitIndex >= 0 && bitIndex < (int)BitCount)
 			{
 				PinState.Toggle(ref Pin.PlayerInputState, bitIndex);
 			}
@@ -133,7 +147,9 @@ namespace DLS.Game
 
 		public bool PointIsInInteractionBounds(Vector2 point) => PointIsInHandleBounds(point) || PointIsInStateIndicatorBounds(point);
 
-		public bool PointIsInStateIndicatorBounds(Vector2 point) => Maths.PointInCircle2D(point, StateDisplayPosition, DevPinStateDisplayRadius);
+		public bool PointIsInStateIndicatorBounds(Vector2 point) => BitCount == PinTritCount.Trit1
+			? Maths.PointInCircle2D(point, StateDisplayPosition, DevPinStateDisplayRadius)
+			: Bounds2D.CreateFromCentreAndSize(StateDisplayPosition, StateGridSize).PointInBounds(point);
 
 		public bool PointIsInHandleBounds(Vector2 point) => HandleBounds().PointInBounds(point);
 	}

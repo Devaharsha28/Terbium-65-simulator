@@ -223,74 +223,98 @@ namespace DLS.Simulation
 			return result < uint.MaxValue / 2;
 		}
 
+		static sbyte EvaluateUnary(ChipType type, int a) => (sbyte)(type switch
+		{
+			ChipType.Buf => a,
+			ChipType.Not => -a,
+			ChipType.PNot => a == 1 ? -1 : 1,
+			ChipType.NNot => a == -1 ? 1 : -1,
+			ChipType.Abs => Math.Abs(a),
+			ChipType.Clu => Math.Max(a, 0),
+			ChipType.Cld => Math.Min(a, 0),
+			ChipType.Inc or ChipType.Rtu => a == 1 ? -1 : a + 1,
+			ChipType.Dec or ChipType.Rtd => a == -1 ? 1 : a - 1,
+			ChipType.Isp => a == 1 ? 1 : -1,
+			ChipType.Isz => a == 0 ? 1 : -1,
+			ChipType.Isn => a == -1 ? 1 : -1,
+			_ => throw new ArgumentOutOfRangeException(nameof(type))
+		});
+
+		static sbyte EvaluateBinary(ChipType type, int a, int b)
+		{
+			int sum = a + b;
+			int wrappedSum = sum > 1 ? sum - 3 : sum < -1 ? sum + 3 : sum;
+			return (sbyte)(type switch
+			{
+				ChipType.Min or ChipType.And => Math.Min(a, b),
+				ChipType.Nand => -Math.Min(a, b),
+				ChipType.Max or ChipType.Or => Math.Max(a, b),
+				ChipType.Nor => -Math.Max(a, b),
+				ChipType.Cons => a == b ? a : 0,
+				ChipType.NCons => a == b ? -a : 0,
+				// The supplied ANY table equals MAX; keep distinct component IDs.
+				ChipType.Any => Math.Max(a, b),
+				ChipType.NAny => -Math.Max(a, b),
+				ChipType.Mul => a * b,
+				ChipType.NMul => -a * b,
+				ChipType.Sum => wrappedSum,
+				ChipType.NSum => -wrappedSum,
+				_ => throw new ArgumentOutOfRangeException(nameof(type))
+			});
+		}
+
 		static void ProcessBuiltinChip(SimChip chip)
 		{
 			switch (chip.ChipType)
 			{
 				// ---- Process Built-in chips ----
-				case ChipType.Nand:
-				{
-					uint nandOp = 1 ^ (chip.InputPins[0].State & chip.InputPins[1].State);
-					chip.OutputPins[0].State = (ushort)(nandOp & 1);
-					break;
-				}
 				case ChipType.Not:
+				case ChipType.Buf:
+				case ChipType.PNot:
+				case ChipType.NNot:
+				case ChipType.Abs:
+				case ChipType.Clu:
+				case ChipType.Cld:
+				case ChipType.Inc:
+				case ChipType.Dec:
+				case ChipType.Rtu:
+				case ChipType.Rtd:
+				case ChipType.Isp:
+				case ChipType.Isz:
+				case ChipType.Isn:
 				{
-					uint inState = chip.InputPins[0].State;
-					uint outState = 0;
-					if (PinState.IsTritDisconnected(inState))
-					{
-						PinState.SetTritDisconnected(ref outState);
-					}
-					else
-					{
-						sbyte trit = PinState.GetTritValue(inState);
-						PinState.SetTritValue(ref outState, (sbyte)(-trit));
-					}
-					chip.OutputPins[0].State = outState;
+					uint input = chip.InputPins[0].State;
+					if (PinState.IsTritDisconnected(input)) PinState.SetAllDisconnected(ref chip.OutputPins[0].State);
+					else PinState.SetTritValue(ref chip.OutputPins[0].State, EvaluateUnary(chip.ChipType, PinState.GetTritValue(input)));
 					break;
 				}
 				case ChipType.Min:
-				{
-					uint inB = chip.InputPins[0].State;
-					uint inA = chip.InputPins[1].State;
-					uint outState = 0;
-					if (PinState.IsTritDisconnected(inA) || PinState.IsTritDisconnected(inB))
-					{
-						PinState.SetTritDisconnected(ref outState);
-					}
-					else
-					{
-						sbyte tritA = PinState.GetTritValue(inA);
-						sbyte tritB = PinState.GetTritValue(inB);
-						PinState.SetTritValue(ref outState, tritA < tritB ? tritA : tritB);
-					}
-					chip.OutputPins[0].State = outState;
-					break;
-				}
 				case ChipType.Max:
+				case ChipType.Nand:
+				case ChipType.And:
+				case ChipType.Or:
+				case ChipType.Nor:
+				case ChipType.Cons:
+				case ChipType.NCons:
+				case ChipType.Any:
+				case ChipType.NAny:
+				case ChipType.Mul:
+				case ChipType.NMul:
+				case ChipType.Sum:
+				case ChipType.NSum:
 				{
-					uint inB = chip.InputPins[0].State;
-					uint inA = chip.InputPins[1].State;
-					uint outState = 0;
-					if (PinState.IsTritDisconnected(inA) || PinState.IsTritDisconnected(inB))
-					{
-						PinState.SetTritDisconnected(ref outState);
-					}
-					else
-					{
-						sbyte tritA = PinState.GetTritValue(inA);
-						sbyte tritB = PinState.GetTritValue(inB);
-						PinState.SetTritValue(ref outState, tritA > tritB ? tritA : tritB);
-					}
-					chip.OutputPins[0].State = outState;
+					uint a = chip.InputPins[0].State, b = chip.InputPins[1].State;
+					if (PinState.IsTritDisconnected(a) || PinState.IsTritDisconnected(b))
+						PinState.SetAllDisconnected(ref chip.OutputPins[0].State);
+					else PinState.SetTritValue(ref chip.OutputPins[0].State,
+						EvaluateBinary(chip.ChipType, PinState.GetTritValue(a), PinState.GetTritValue(b)));
 					break;
 				}
 				case ChipType.Clock:
 				{
 					bool high = stepsPerClockTransition != 0 && ((simulationFrame / stepsPerClockTransition) & 1) == 0;
 					uint state = 0;
-					PinState.SetTritValue(ref state, high ? PinState.TritPositive : PinState.TritNegative);
+					PinState.SetTritValue(ref state, high ? PinState.TritPositive : PinState.TritZero);
 					chip.OutputPins[0].State = state;
 					break;
 				}
@@ -315,7 +339,7 @@ namespace DLS.Simulation
 					}
 
 					uint outputState = 0;
-					PinState.SetTritValue(ref outputState, PinState.TritNegative);
+					PinState.SetTritValue(ref outputState, PinState.TritZero);
 					if (pulseTicksRemaining > 0)
 					{
 						chip.InternalState[1]--;
@@ -331,67 +355,70 @@ namespace DLS.Simulation
 
 					break;
 				}
-				case ChipType.Split_4To1Bit:
+				case ChipType.Split_3To1Trit:
 				{
 					uint inState = chip.InputPins[0].State;
-					for (int i = 0; i < 4; i++)
+					for (int i = 0; i < 3; i++)
 					{
 						uint outState = 0;
-						PinState.SetTritAtIndex(ref outState, 0, PinState.GetTritAtIndex(inState, 3 - i));
-						if (PinState.IsTritAtIndexDisconnected(inState, 3 - i)) PinState.SetTritAtIndexDisconnected(ref outState, 0);
+						PinState.SetTritAtIndex(ref outState, 0, PinState.GetTritAtIndex(inState, 2 - i));
+						if (PinState.IsTritAtIndexDisconnected(inState, 2 - i)) PinState.SetTritAtIndexDisconnected(ref outState, 0);
 						chip.OutputPins[i].State = outState;
 					}
 					break;
 				}
-				case ChipType.Merge_1To4Bit:
+				case ChipType.Merge_1To3Trit:
 				{
 					uint outState = 0;
-					for (int i = 0; i < 4; i++)
+					for (int i = 0; i < 3; i++)
 					{
-						uint inState = chip.InputPins[3 - i].State;
+						uint inState = chip.InputPins[2 - i].State;
 						PinState.SetTritAtIndex(ref outState, i, PinState.GetTritAtIndex(inState, 0));
 						if (PinState.IsTritAtIndexDisconnected(inState, 0)) PinState.SetTritAtIndexDisconnected(ref outState, i);
 					}
 					chip.OutputPins[0].State = outState;
 					break;
 				}
-				case ChipType.Merge_1To8Bit:
+				case ChipType.Merge_1To9Trit:
 				{
 					uint outState = 0;
-					for (int i = 0; i < 8; i++)
+					for (int i = 0; i < 9; i++)
 					{
-						uint inState = chip.InputPins[7 - i].State;
+						uint inState = chip.InputPins[8 - i].State;
 						PinState.SetTritAtIndex(ref outState, i, PinState.GetTritAtIndex(inState, 0));
 						if (PinState.IsTritAtIndexDisconnected(inState, 0)) PinState.SetTritAtIndexDisconnected(ref outState, i);
 					}
 					chip.OutputPins[0].State = outState;
 					break;
 				}
-				case ChipType.Merge_4To8Bit:
+				case ChipType.Merge_3To9Trit:
 				{
-					SimPin in4A = chip.InputPins[0];
-					SimPin in4B = chip.InputPins[1];
-					SimPin out8 = chip.OutputPins[0];
-					PinState.Set8BitFrom4BitSources(ref out8.State, in4B.State, in4A.State);
+					SimPin in3A = chip.InputPins[0];
+					SimPin in3B = chip.InputPins[1];
+					SimPin in3C = chip.InputPins[2];
+					SimPin out9 = chip.OutputPins[0];
+					PinState.Set9TritFrom3TritSources(ref out9.State, in3C.State, in3B.State, in3A.State);
 					break;
 				}
-				case ChipType.Split_8To4Bit:
+				case ChipType.Split_9To3Trit:
 				{
-					SimPin in8 = chip.InputPins[0];
-					SimPin out4A = chip.OutputPins[0];
-					SimPin out4B = chip.OutputPins[1];
-					PinState.Set4BitFrom8BitSource(ref out4A.State, in8.State, false);
-					PinState.Set4BitFrom8BitSource(ref out4B.State, in8.State, true);
+					SimPin in9 = chip.InputPins[0];
+					SimPin out3A = chip.OutputPins[0];
+					SimPin out3B = chip.OutputPins[1];
+					SimPin out3C = chip.OutputPins[2];
+					PinState.Set3TritFrom9TritSource(ref out3A.State, in9.State, 2);
+					PinState.Set3TritFrom9TritSource(ref out3B.State, in9.State, 1);
+					PinState.Set3TritFrom9TritSource(ref out3C.State, in9.State, 0);
 					break;
 				}
-				case ChipType.Split_8To1Bit:
+				case ChipType.Split_9To1Trit:
 				{
 					uint inState = chip.InputPins[0].State;
-					for (int i = 0; i < 8; i++)
+					for (int i = 0; i < 9; i++)
 					{
 						uint outState = 0;
-						PinState.SetTritAtIndex(ref outState, 0, PinState.GetTritAtIndex(inState, 7 - i));
-						if (PinState.IsTritAtIndexDisconnected(inState, 7 - i)) PinState.SetTritAtIndexDisconnected(ref outState, 0);
+						PinState.SetTritAtIndex(ref outState, 0, PinState.GetTritAtIndex(inState, 8 - i));
+						if (PinState.IsTritAtIndexDisconnected(inState, 8 - i)) PinState.SetTritAtIndexDisconnected(ref outState, 0);
 						chip.OutputPins[i].State = outState;
 					}
 					break;
@@ -415,158 +442,29 @@ namespace DLS.Simulation
 					chip.OutputPins[0].State = state;
 					break;
 				}
+				case ChipType.Rom_19683x9:
+				{
+					uint address = chip.InputPins[0].State;
+					if (PinState.HasDisconnectedTrit(address, 9))
+						PinState.SetAllDisconnected(ref chip.OutputPins[0].State);
+					else
+					{
+						int index = PinState.GetTernaryDecimalValue(address, 9) + 9841;
+						chip.OutputPins[0].State = chip.InternalState[index];
+					}
+					break;
+				}
+				// Legacy memory/display semantics are not defined for ternary yet.
+				// Keep serialized data intact, but never index buffers with packed
+				// ternary bits or inject binary bytes into a ternary signal.
 				case ChipType.DisplayRGB:
-				{
-					const uint addressSpace = 256;
-					uint addressPin = chip.InputPins[0].State;
-					uint redPin = chip.InputPins[1].State;
-					uint greenPin = chip.InputPins[2].State;
-					uint bluePin = chip.InputPins[3].State;
-					uint resetPin = chip.InputPins[4].State;
-					uint writePin = chip.InputPins[5].State;
-					uint refreshPin = chip.InputPins[6].State;
-					uint clockPin = chip.InputPins[7].State;
-
-					// Detect clock rising edge
-					bool clockHigh = PinState.FirstBitHigh(clockPin);
-					bool isRisingEdge = clockHigh && chip.InternalState[^1] == 0;
-					chip.InternalState[^1] = clockHigh ? 1u : 0;
-
-					if (isRisingEdge)
-					{
-						// Clear back buffer
-						if (PinState.FirstBitHigh(resetPin))
-						{
-							for (int i = 0; i < addressSpace; i++)
-							{
-								chip.InternalState[i + addressSpace] = 0;
-							}
-						}
-						// Write to back-buffer
-						else if (PinState.FirstBitHigh(writePin))
-						{
-							uint addressIndex = PinState.GetBitStates(addressPin) + addressSpace;
-							uint data = (uint)(PinState.GetBitStates(redPin) | (PinState.GetBitStates(greenPin) << 4) | (PinState.GetBitStates(bluePin) << 8));
-							chip.InternalState[addressIndex] = data;
-						}
-
-						// Copy back-buffer to display buffer
-						if (PinState.FirstBitHigh(refreshPin))
-						{
-							for (int i = 0; i < addressSpace; i++)
-							{
-								chip.InternalState[i] = chip.InternalState[i + addressSpace];
-							}
-						}
-					}
-
-					// Output current pixel colour
-					uint colData = chip.InternalState[PinState.GetBitStates(addressPin)];
-					chip.OutputPins[0].State = (ushort)((colData >> 0) & 0b1111); // red
-					chip.OutputPins[1].State = (ushort)((colData >> 4) & 0b1111); // green
-					chip.OutputPins[2].State = (ushort)((colData >> 8) & 0b1111); // blue
-
-					break;
-				}
 				case ChipType.DisplayDot:
-				{
-					const uint addressSpace = 256;
-					uint addressPin = chip.InputPins[0].State;
-					uint pixelInputPin = chip.InputPins[1].State;
-					uint resetPin = chip.InputPins[2].State;
-					uint writePin = chip.InputPins[3].State;
-					uint refreshPin = chip.InputPins[4].State;
-					uint clockPin = chip.InputPins[5].State;
-
-					// Detect clock rising edge
-					bool clockHigh = PinState.FirstBitHigh(clockPin);
-					bool isRisingEdge = clockHigh && chip.InternalState[^1] == 0;
-					chip.InternalState[^1] = clockHigh ? 1u : 0;
-
-					if (isRisingEdge)
-					{
-						// Clear back buffer
-						if (PinState.FirstBitHigh(resetPin))
-						{
-							for (int i = 0; i < addressSpace; i++)
-							{
-								chip.InternalState[i + addressSpace] = 0;
-							}
-						}
-						// Write to back-buffer
-						else if (PinState.FirstBitHigh(writePin))
-						{
-							uint addressIndex = PinState.GetBitStates(addressPin) + addressSpace;
-							uint data = PinState.GetBitStates(pixelInputPin);
-							chip.InternalState[addressIndex] = data;
-						}
-
-						// Copy back-buffer to display buffer
-						if (PinState.FirstBitHigh(refreshPin))
-						{
-							for (int i = 0; i < addressSpace; i++)
-							{
-								chip.InternalState[i] = chip.InternalState[i + addressSpace];
-							}
-						}
-					}
-
-					// Output current pixel colour
-					ushort pixelState = (ushort)chip.InternalState[PinState.GetBitStates(addressPin)];
-					chip.OutputPins[0].State = pixelState;
-
-					break;
-				}
 				case ChipType.dev_Ram_8Bit:
-				{
-					uint addressPin = chip.InputPins[0].State;
-					uint dataPin = chip.InputPins[1].State;
-					uint writeEnablePin = chip.InputPins[2].State;
-					uint resetPin = chip.InputPins[3].State;
-					uint clockPin = chip.InputPins[4].State;
-
-					// Detect clock rising edge
-					bool clockHigh = PinState.FirstBitHigh(clockPin);
-					bool isRisingEdge = clockHigh && chip.InternalState[^1] == 0;
-					chip.InternalState[^1] = clockHigh ? 1u : 0;
-
-					// Write/Reset on rising edge
-					if (isRisingEdge)
-					{
-						if (PinState.FirstBitHigh(resetPin))
-						{
-							for (int i = 0; i < 256; i++)
-							{
-								chip.InternalState[i] = 0;
-							}
-						}
-						else if (PinState.FirstBitHigh(writeEnablePin))
-						{
-							chip.InternalState[PinState.GetBitStates(addressPin)] = PinState.GetBitStates(dataPin);
-						}
-					}
-
-					// Output data at current address
-					chip.OutputPins[0].State = (ushort)chip.InternalState[PinState.GetBitStates(addressPin)];
-
-					break;
-				}
 				case ChipType.Rom_256x16:
-				{
-					const int ByteMask = 0b11111111;
-					uint address = PinState.GetBitStates(chip.InputPins[0].State);
-					uint data = chip.InternalState[address];
-					chip.OutputPins[0].State = (ushort)((data >> 8) & ByteMask);
-					chip.OutputPins[1].State = (ushort)(data & ByteMask);
+					foreach (SimPin output in chip.OutputPins) PinState.SetAllDisconnected(ref output.State);
 					break;
-				}
 				case ChipType.Buzzer:
-				{
-					int freqIndex = PinState.GetBitStates(chip.InputPins[0].State);
-					int volumeIndex = PinState.GetBitStates(chip.InputPins[1].State);
-					audioState.RegisterNote(freqIndex, (uint)volumeIndex);
-					break;
-				}
+					break; // Silent until ternary pitch/volume semantics are defined.
 				// ---- Bus types ----
 				default:
 				{

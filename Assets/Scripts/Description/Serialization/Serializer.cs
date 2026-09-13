@@ -14,7 +14,25 @@ namespace DLS.Description
 		public static string SerializeProjectDescription(ProjectDescription description) => Serialize(description);
 
 		public static AppSettings DeserializeAppSettings(string settingsString) => Deserialize<AppSettings>(settingsString);
-		public static ChipDescription DeserializeChipDescription(string serializedDescription) => Deserialize<ChipDescription>(serializedDescription);
+		public static ChipDescription DeserializeChipDescription(string serializedDescription)
+		{
+			JObject data = JObject.Parse(serializedDescription);
+			foreach (string field in new[] { "InputPins", "OutputPins" })
+			{
+				if (data[field] is not JArray pins) continue;
+				foreach (JObject pin in pins)
+				{
+					// Read the old field only for already-supported ternary widths.
+					// A 4/8-bit circuit cannot be silently reinterpreted as 3/9 trits.
+					int width = (int?)(pin["TritCount"] ?? pin["BitCount"]) ?? 0;
+					if (width != 1 && width != 3 && width != 9)
+						throw new NotSupportedException($"Unsupported pin width {width}; this milestone requires 1, 3 or 9 trits.");
+					pin["TritCount"] = width;
+					pin.Remove("BitCount");
+				}
+			}
+			return Deserialize<ChipDescription>(data.ToString());
+		}
 		public static ProjectDescription DeserializeProjectDescription(string serializedDescription) => Deserialize<ProjectDescription>(serializedDescription);
 
 		static JsonSerializerSettings CreateSerializationSettings()

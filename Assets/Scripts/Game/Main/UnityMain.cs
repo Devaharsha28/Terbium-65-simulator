@@ -126,23 +126,10 @@ namespace DLS.Game
 				if (InteractionState.PinUnderMouse != null)
 				{
 					SimPin simPin = Project.ActiveProject.rootSimChip.GetSimPinFromAddress(InteractionState.PinUnderMouse.Address);
-					ushort bitData = PinState.GetBitStates(simPin.State);
-					ushort tristateFlags = PinState.GetTristateFlags(simPin.State);
-					string bitString = StringHelper.CreateBinaryString(bitData, true);
-					string triStateString = StringHelper.CreateBinaryString(tristateFlags, true);
-
-					string displayString = "";
-					for (int i = 0; i < bitString.Length; i++)
-					{
-						if (triStateString[i] == '1')
-						{
-							displayString += bitString[i] == '1' ? "?" : "x";
-						}
-						else
-						{
-							displayString += bitString[i];
-						}
-					}
+					int width = (int)InteractionState.PinUnderMouse.bitCount;
+					char[] trits = new char[width];
+					PinState.FormatTernary(simPin.State, width, trits);
+					string displayString = new string(trits);
 
 					Debug.Log($"Pin state: {displayString}");
 				}

@@ -101,7 +101,7 @@ namespace DLS.Graphics
 				if (element is DevPinInstance devPin)
 				{
 					if (drawAllDevPinNames) DrawPinLabel(devPin.Pin);
-					if (devPin.BitCount != PinBitCount.Bit1) DrawPinDecValue(devPin);
+					if (devPin.BitCount != PinTritCount.Trit1) DrawPinDecValue(devPin);
 				}
 				else if (element is SubChipInstance subchip)
 				{
@@ -226,14 +226,26 @@ namespace DLS.Graphics
 
 			int charCount;
 
-			if (pin.pinValueDisplayMode != PinValueDisplayMode.HEX)
+			if (pin.pinValueDisplayMode == PinValueDisplayMode.Decimal && PinState.HasDisconnectedTrit(pin.DisplayState, (int)pin.BitCount))
 			{
-				charCount = StringHelper.CreateIntegerStringNonAlloc(pin.decimalDisplayCharBuffer, pin.GetStateDecimalDisplayValue());
+				pin.decimalDisplayCharBuffer[0] = '?';
+				charCount = 1;
 			}
-
+			else if (pin.pinValueDisplayMode == PinValueDisplayMode.Ternary)
+			{
+				charCount = pin.CreateTernaryString(pin.decimalDisplayCharBuffer);
+			}
+			else if (pin.pinValueDisplayMode == PinValueDisplayMode.Nonary)
+			{
+				charCount = pin.CreateGroupedString(pin.decimalDisplayCharBuffer, 2);
+			}
+			else if (pin.pinValueDisplayMode == PinValueDisplayMode.Hept)
+			{
+				charCount = pin.CreateGroupedString(pin.decimalDisplayCharBuffer, 3);
+			}
 			else
 			{
-				charCount = StringHelper.CreateHexStringNonAlloc(pin.decimalDisplayCharBuffer, pin.GetStateDecimalDisplayValue());
+				charCount = Seb.Helpers.StringHelper.CreateIntegerStringNonAlloc(pin.decimalDisplayCharBuffer, pin.GetStateDecimalDisplayValue());
 			}
 
 			FontType font = FontBold;
@@ -584,7 +596,7 @@ namespace DLS.Graphics
 
 		public static void DrawDevPin(DevPinInstance devPin)
 		{
-			if (devPin.BitCount == PinBitCount.Bit1)
+			if (devPin.BitCount == PinTritCount.Trit1)
 			{
 				Draw1BitDevPin(devPin);
 			}
@@ -618,12 +630,12 @@ namespace DLS.Graphics
 			Draw.Point(devPin.StateDisplayPosition, DevPinStateDisplayRadius + DevPinStateDisplayOutline, ColHelper.Darken(stateCol, 1.25f));
 			Draw.Point(devPin.StateDisplayPosition, DevPinStateDisplayRadius, stateCol);
 
-			uint state = devPin.IsInputPin ? devPin.Pin.PlayerInputState : devPin.Pin.State;
+			uint state = devPin.DisplayState;
 			if (!PinState.IsTritAtIndexDisconnected(state, 0))
 			{
 				sbyte trit = PinState.GetTritAtIndex(state, 0);
 				string tritStr = trit == PinState.TritNegative ? "-" : trit == PinState.TritPositive ? "+" : "0";
-				Draw.Text(FontBold, tritStr, FontSizePinLabel * 1.25f, devPin.StateDisplayPosition, Anchor.TextCentre, Color.white);
+				Draw.Text(FontBold, tritStr, FontSizePinLabel * 1.25f, devPin.StateDisplayPosition, Anchor.TextCentre, ColHelper.ShouldUseBlackText(stateCol) ? Color.black : Color.white);
 			}
 
 			// Draw pin and handle
@@ -642,12 +654,9 @@ namespace DLS.Graphics
 			const float squareDisplayScaleT = 0.9f;
 			Vector2 squareDisplaySize = Vector2.one * (MultiBitPinStateDisplaySquareSize * squareDisplayScaleT);
 			Vector2 inputGridSize = devPin.StateGridSize;
-			Vector2 inputGridSizeWithoutOutline = inputGridSize - Vector2.one * DevPinStateDisplayOutline;
 			Vector2 centre = devPin.StateDisplayPosition;
-
-			Vector2 topLeft = new(centre.x - inputGridSizeWithoutOutline.x / 2, centre.y + inputGridSizeWithoutOutline.y / 2);
 			Draw.Quad(centre, inputGridSize, Color.black);
-			int currBitIndex = (int)devPin.BitCount - 1;
+
 
 			bool mouseOverStateGrid = InputHelper.MouseInsideBounds_World(centre, inputGridSize);
 			bool isInteractable = controller.CanInteractWithPinStateDisplay && devPin.IsInputPin;
@@ -660,7 +669,8 @@ namespace DLS.Graphics
 			{
 				for (int x = 0; x < stateGridDim.x; x++)
 				{
-					Vector2 pos = topLeft + MultiBitPinStateDisplaySquareSize * new Vector2(x + 0.5f, -(y + 0.5f));
+					int currBitIndex = devPin.GetCellTritIndex(x, y);
+					Vector2 pos = devPin.GetCellCentre(x, y);
 
 					// Highlight on hover, toggle on press
 					bool mouseOverStateToggle = InputHelper.MouseInsideBounds_World(pos, squareDisplaySize);
@@ -679,15 +689,14 @@ namespace DLS.Graphics
 
 					Draw.Quad(pos, squareDisplaySize, stateCol);
 					
-					uint state = devPin.IsInputPin ? devPin.Pin.PlayerInputState : devPin.Pin.State;
+					uint state = devPin.DisplayState;
 					if (!PinState.IsTritAtIndexDisconnected(state, currBitIndex))
 					{
 						sbyte trit = PinState.GetTritAtIndex(state, currBitIndex);
 						string tritStr = trit == PinState.TritNegative ? "-" : trit == PinState.TritPositive ? "+" : "0";
-						Draw.Text(FontBold, tritStr, FontSizePinLabel * 1.25f, pos, Anchor.TextCentre, Color.white);
+						Draw.Text(FontBold, tritStr, FontSizePinLabel * 1.25f, pos, Anchor.TextCentre, ColHelper.ShouldUseBlackText(stateCol) ? Color.black : Color.white);
 					}
 
-					currBitIndex--;
 				}
 			}
 
@@ -713,7 +722,7 @@ namespace DLS.Graphics
 
 		public static void DrawWire(WireInstance wire)
 		{
-			if (wire.bitCount == PinBitCount.Bit1)
+			if (wire.bitCount == PinTritCount.Trit1)
 			{
 				DrawSingleBitWire(wire);
 			}
@@ -856,7 +865,7 @@ namespace DLS.Graphics
 
 		static void DrawPin(PinInstance pin)
 		{
-			if (pin.bitCount == PinBitCount.Bit1)
+			if (pin.bitCount == PinTritCount.Trit1)
 			{
 				DrawSingleBitPin(pin);
 			}
@@ -966,7 +975,7 @@ namespace DLS.Graphics
 			if (wire.IsBusWire) return int.MaxValue - 2;
 
 			// Draw wires carrying high signal above those carrying low signal (for single bit wires)
-			bool wireIsHigh = wire.bitCount == PinBitCount.Bit1 && PinState.FirstBitHigh(wire.SourcePin.State);
+			bool wireIsHigh = wire.bitCount == PinTritCount.Trit1 && PinState.FirstBitHigh(wire.SourcePin.State);
 			int drawPriority_signalHigh = wireIsHigh ? 1000 : 0;
 
 			// Draw multi-bit wires above single bit wires

@@ -31,7 +31,7 @@ namespace DLS.Simulation
 			latestSourceID = -1;
 			latestSourceParentChipID = -1;
 
-			PinState.SetTritDisconnected(ref State);
+			PinState.SetAllDisconnected(ref State);
 		}
 
 		public bool FirstBitHigh => !PinState.IsTritDisconnected(State) && PinState.GetTritValue(State) == PinState.TritPositive;
@@ -59,10 +59,15 @@ namespace DLS.Simulation
 
 			if (numInputsReceivedThisFrame > 0)
 			{
-				// For single-trit milestone: use simple first-input-wins for now
-				// TODO: implement proper ternary multi-driver resolution later
-				State = source.State;
-				set = true;
+				// Floating sources must not erase driven trits. Conflicting driven
+				// sources retain the existing last-arrival resolution policy.
+				set = false;
+				for (int i = 0; i < 9; i++)
+				{
+					if (PinState.IsTritAtIndexDisconnected(source.State, i)) continue;
+					PinState.SetTritAtIndex(ref State, i, PinState.GetTritAtIndex(source.State, i));
+					set = true;
+				}
 			}
 			else
 			{

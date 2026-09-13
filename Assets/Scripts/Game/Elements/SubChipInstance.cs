@@ -4,6 +4,7 @@ using System.Linq;
 using DLS.Description;
 using DLS.Graphics;
 using DLS.SaveSystem;
+using DLS.Simulation;
 using Seb.Helpers;
 using Seb.Types;
 using UnityEngine;
@@ -51,7 +52,11 @@ namespace DLS.Game
 			Displays = CreateDisplayInstances(description);
 
 			// Load internal data (or create default in case missing)
-			if (subChipDesc.InternalData == null || subChipDesc.InternalData.Length == 0)
+			if (ChipType == ChipType.Rom_19683x9)
+			{
+				InternalData = PinState.CreateRom9Data(subChipDesc.InternalData);
+			}
+			else if (subChipDesc.InternalData == null || subChipDesc.InternalData.Length == 0)
 			{
 				InternalData = DescriptionCreator.CreateDefaultInstanceData(description.ChipType);
 			}
@@ -183,22 +188,22 @@ namespace DLS.Game
 		public static float MinChipHeightForPins(PinDescription[] pins)
 		{
 			if (pins == null || pins.Length == 0) return 0;
-			return CalculateDefaultPinLayout(pins.Select(p => p.BitCount).ToArray()).chipHeight;
+			return CalculateDefaultPinLayout(pins.Select(p => p.TritCount).ToArray()).chipHeight;
 		}
 
 		// Calculate minimal height of chip to fit the given pins, and calculate their y positions (in grid space)
-		public static (float chipHeight, float[] pinGridY) CalculateDefaultPinLayout(PinBitCount[] pins)
+		public static (float chipHeight, float[] pinGridY) CalculateDefaultPinLayout(PinTritCount[] pins)
 		{
 			int gridY = 0; // top
 			float[] pinGridYVals = new float[pins.Length];
 
 			for (int i = 0; i < pins.Length; i++)
 			{
-				PinBitCount pinBitCount = pins[i];
+				PinTritCount pinBitCount = pins[i];
 				int pinGridHeight = pinBitCount switch
 				{
-					PinBitCount.Bit1 => 2,
-					PinBitCount.Bit4 => 3,
+					PinTritCount.Trit1 => 2,
+					PinTritCount.Trit3 => 3,
 					_ => 4
 				};
 
@@ -302,13 +307,13 @@ namespace DLS.Game
 		}
 
 
-		public static float PinHeightFromBitCount(PinBitCount bitCount)
+		public static float PinHeightFromBitCount(PinTritCount bitCount)
 		{
 			return bitCount switch
 			{
-				PinBitCount.Bit1 => DrawSettings.PinRadius * 2,
-				PinBitCount.Bit4 => DrawSettings.PinHeight4Bit,
-				PinBitCount.Bit8 => DrawSettings.PinHeight8Bit,
+				PinTritCount.Trit1 => DrawSettings.PinRadius * 2,
+				PinTritCount.Trit3 => DrawSettings.PinHeight4Bit,
+				PinTritCount.Trit9 => DrawSettings.PinHeight8Bit,
 				_ => throw new Exception("Bit count not implemented " + bitCount)
 			};
 		}

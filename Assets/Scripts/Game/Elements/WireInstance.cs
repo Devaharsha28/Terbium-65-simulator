@@ -8,7 +8,7 @@ namespace DLS.Game
 {
 	public class WireInstance : IInteractable
 	{
-		public readonly PinBitCount bitCount;
+		public readonly PinTritCount bitCount;
 
 		// Wire points for multi-bit wires. Note: must be populated with points when drawing
 		public readonly BitWire[] BitWires;
@@ -314,7 +314,7 @@ namespace DLS.Game
 		{
 			Color col = IsFullyConnected ? SourcePin.GetStateCol(bitIndex, false, false) : DrawSettings.ActiveTheme.StateDisconnectedCol;
 
-			if (bitCount != PinBitCount.Bit1 && bitIndex % 2 == 0)
+			if (bitCount != PinTritCount.Trit1 && bitIndex % 2 == 0)
 			{
 				Color alternatingWireHighlightDisconnected = Color.white * 0.075f;
 				Color alternatingWireHighlightConnected = Color.white * 0.01f;

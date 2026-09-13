@@ -24,33 +24,60 @@ namespace DLS.Description
 		DisplayLED,
 
 		// ---- Merge / Split ----
-		Merge_1To4Bit,
-		Merge_1To8Bit,
-		Merge_4To8Bit,
-		Split_4To1Bit,
-		Split_8To4Bit,
-		Split_8To1Bit,
+		Merge_1To3Trit,
+		Merge_1To9Trit,
+		Merge_3To9Trit,
+		Split_3To1Trit,
+		Split_9To3Trit,
+		Split_9To1Trit,
 
 		// ---- In / Out Pins ----
-		In_1Bit,
-		In_4Bit,
-		In_8Bit,
-		Out_1Bit,
-		Out_4Bit,
-		Out_8Bit,
+		In_1Trit,
+		In_3Trit,
+		In_9Trit,
+		Out_1Trit,
+		Out_3Trit,
+		Out_9Trit,
 
 		Key,
 
 		// ---- Buses ----
-		Bus_1Bit,
-		BusTerminus_1Bit,
-		Bus_4Bit,
-		BusTerminus_4Bit,
-		Bus_8Bit,
-		BusTerminus_8Bit,
+		Bus_1Trit,
+		BusTerminus_1Trit,
+		Bus_3Trit,
+		BusTerminus_3Trit,
+		Bus_9Trit,
+		BusTerminus_9Trit,
 		
 		// ---- Audio ----
-		Buzzer
+		Buzzer,
+
+		// Append types to preserve serialized IDs of existing components.
+		Buf,
+		PNot,
+		NNot,
+		Abs,
+		Clu,
+		Cld,
+		Inc,
+		Dec,
+		Rtu,
+		Rtd,
+		Isp,
+		Isz,
+		Isn,
+		And,
+		Or,
+		Nor,
+		Cons,
+		NCons,
+		Any,
+		NAny,
+		Mul,
+		NMul,
+		Sum,
+		NSum,
+		Rom_19683x9
 
 	}
 }

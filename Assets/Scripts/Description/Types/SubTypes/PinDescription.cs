@@ -7,26 +7,26 @@ namespace DLS.Description
 		public string Name;
 		public int ID;
 		public Vector2 Position;
-		public PinBitCount BitCount;
+		public PinTritCount TritCount;
 		public PinColour Colour;
 		public PinValueDisplayMode ValueDisplayMode;
 
-		public PinDescription(string name, int id, Vector2 position, PinBitCount bitCount, PinColour colour, PinValueDisplayMode valueDisplayMode)
+		public PinDescription(string name, int id, Vector2 position, PinTritCount tritCount, PinColour colour, PinValueDisplayMode valueDisplayMode)
 		{
 			Name = name;
 			ID = id;
 			Position = position;
-			BitCount = bitCount;
+			TritCount = tritCount;
 			Colour = colour;
 			ValueDisplayMode = valueDisplayMode;
 		}
 	}
 
-	public enum PinBitCount
+	public enum PinTritCount
 	{
-		Bit1 = 1,
-		Bit4 = 4,
-		Bit8 = 8
+		Trit1 = 1,
+		Trit3 = 3,
+		Trit9 = 9
 	}
 
 	public enum PinColour
@@ -44,8 +44,9 @@ namespace DLS.Description
 	public enum PinValueDisplayMode
 	{
 		Off,
-		UnsignedDecimal,
-		SignedDecimal,
-		HEX
+		Ternary,
+		Decimal,
+		Nonary,
+		Hept
 	}
 }

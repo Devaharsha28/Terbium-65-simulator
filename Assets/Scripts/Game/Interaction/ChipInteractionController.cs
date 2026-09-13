@@ -945,7 +945,7 @@ namespace DLS.Game
 			int instanceID = IDGenerator.GenerateNewElementID(ActiveDevChip);
 
 			// Input/output dev pins are represented as chips for convenience
-			(bool isInput, bool isOutput, PinBitCount numBits) ioPinInfo = ChipTypeHelper.IsInputOrOutputPin(chipDescription.ChipType);
+			(bool isInput, bool isOutput, PinTritCount numBits) ioPinInfo = ChipTypeHelper.IsInputOrOutputPin(chipDescription.ChipType);
 
 			if (ioPinInfo.isInput || ioPinInfo.isOutput) // Dev pin
 			{

@@ -15,16 +15,40 @@ namespace DLS.Game
 			return new[]
 			{
 				// ---- I/O Pins ----
-				CreateInputOrOutputPin(ChipType.In_1Bit),
-				CreateInputOrOutputPin(ChipType.Out_1Bit),
-				CreateInputOrOutputPin(ChipType.In_4Bit),
-				CreateInputOrOutputPin(ChipType.Out_4Bit),
-				CreateInputOrOutputPin(ChipType.In_8Bit),
-				CreateInputOrOutputPin(ChipType.Out_8Bit),
+				CreateInputOrOutputPin(ChipType.In_1Trit),
+				CreateInputOrOutputPin(ChipType.Out_1Trit),
+				CreateInputOrOutputPin(ChipType.In_3Trit),
+				CreateInputOrOutputPin(ChipType.Out_3Trit),
+				CreateInputOrOutputPin(ChipType.In_9Trit),
+				CreateInputOrOutputPin(ChipType.Out_9Trit),
 				CreateInputKeyChip(),
 				// ---- Basic Chips ----
 				CreateNand(),
 				CreateNot(),
+				CreateLogicGate(ChipType.Buf, false),
+				CreateLogicGate(ChipType.PNot, false),
+				CreateLogicGate(ChipType.NNot, false),
+				CreateLogicGate(ChipType.Abs, false),
+				CreateLogicGate(ChipType.Clu, false),
+				CreateLogicGate(ChipType.Cld, false),
+				CreateLogicGate(ChipType.Inc, false),
+				CreateLogicGate(ChipType.Dec, false),
+				CreateLogicGate(ChipType.Rtu, false),
+				CreateLogicGate(ChipType.Rtd, false),
+				CreateLogicGate(ChipType.Isp, false),
+				CreateLogicGate(ChipType.Isz, false),
+				CreateLogicGate(ChipType.Isn, false),
+				CreateLogicGate(ChipType.And, true),
+				CreateLogicGate(ChipType.Or, true),
+				CreateLogicGate(ChipType.Nor, true),
+				CreateLogicGate(ChipType.Cons, true),
+				CreateLogicGate(ChipType.NCons, true),
+				CreateLogicGate(ChipType.Any, true),
+				CreateLogicGate(ChipType.NAny, true),
+				CreateLogicGate(ChipType.Mul, true),
+				CreateLogicGate(ChipType.NMul, true),
+				CreateLogicGate(ChipType.Sum, true),
+				CreateLogicGate(ChipType.NSum, true),
 				CreateMin(),
 				CreateMax(),
 				CreateTristateBuffer(),
@@ -33,26 +57,27 @@ namespace DLS.Game
 				// ---- Memory ----
 				dev_CreateRAM_8(),
 				CreateROM_8(),
+				CreateTernaryROM(),
 				// ---- Merge / Split ----
-				CreateBitConversionChip(ChipType.Split_4To1Bit, PinBitCount.Bit4, PinBitCount.Bit1, 1, 4),
-				CreateBitConversionChip(ChipType.Split_8To4Bit, PinBitCount.Bit8, PinBitCount.Bit4, 1, 2),
-				CreateBitConversionChip(ChipType.Split_8To1Bit, PinBitCount.Bit8, PinBitCount.Bit1, 1, 8),
+				CreateBitConversionChip(ChipType.Split_3To1Trit, PinTritCount.Trit3, PinTritCount.Trit1, 1, 3),
+				CreateBitConversionChip(ChipType.Split_9To3Trit, PinTritCount.Trit9, PinTritCount.Trit3, 1, 3),
+				CreateBitConversionChip(ChipType.Split_9To1Trit, PinTritCount.Trit9, PinTritCount.Trit1, 1, 9),
 
-				CreateBitConversionChip(ChipType.Merge_1To8Bit, PinBitCount.Bit1, PinBitCount.Bit8, 8, 1),
-				CreateBitConversionChip(ChipType.Merge_1To4Bit, PinBitCount.Bit1, PinBitCount.Bit4, 4, 1),
-				CreateBitConversionChip(ChipType.Merge_4To8Bit, PinBitCount.Bit4, PinBitCount.Bit8, 2, 1),
+				CreateBitConversionChip(ChipType.Merge_1To9Trit, PinTritCount.Trit1, PinTritCount.Trit9, 9, 1),
+				CreateBitConversionChip(ChipType.Merge_1To3Trit, PinTritCount.Trit1, PinTritCount.Trit3, 3, 1),
+				CreateBitConversionChip(ChipType.Merge_3To9Trit, PinTritCount.Trit3, PinTritCount.Trit9, 3, 1),
 				// ---- Displays ----
 				CreateDisplay7Seg(),
 				CreateDisplayRGB(),
 				CreateDisplayDot(),
 				CreateDisplayLED(),
 				// ---- Bus ----
-				CreateBus(PinBitCount.Bit1),
-				CreateBusTerminus(PinBitCount.Bit1),
-				CreateBus(PinBitCount.Bit4),
-				CreateBusTerminus(PinBitCount.Bit4),
-				CreateBus(PinBitCount.Bit8),
-				CreateBusTerminus(PinBitCount.Bit8),
+				CreateBus(PinTritCount.Trit1),
+				CreateBusTerminus(PinTritCount.Trit1),
+				CreateBus(PinTritCount.Trit3),
+				CreateBusTerminus(PinTritCount.Trit3),
+				CreateBus(PinTritCount.Trit9),
+				CreateBusTerminus(PinTritCount.Trit9),
 				// ---- Audio ----
 				CreateBuzzer()
 			};
@@ -67,6 +92,25 @@ namespace DLS.Game
 			PinDescription[] outputPins = { CreatePinDescription("OUT", 2) };
 
 			return CreateBuiltinChipDescription(ChipType.Nand, size, col, inputPins, outputPins);
+		}
+
+		static ChipDescription CreateLogicGate(ChipType type, bool binary)
+		{
+			PinDescription[] inputs = binary
+				? new[] { CreatePinDescription("IN B", 0), CreatePinDescription("IN A", 1) }
+				: new[] { CreatePinDescription("IN", 0) };
+			PinDescription[] outputs = { CreatePinDescription("OUT", inputs.Length) };
+			return CreateBuiltinChipDescription(type, new Vector2(CalculateGridSnappedWidth(GridSize * 8), GridSize * 4),
+				new Color(0.3f, 0.5f, 0.7f), inputs, outputs);
+		}
+
+		static ChipDescription CreateTernaryROM()
+		{
+			PinDescription[] inputs = { CreatePinDescription("ADDRESS", 0, PinTritCount.Trit9) };
+			PinDescription[] outputs = { CreatePinDescription("DATA", 1, PinTritCount.Trit9) };
+			return CreateBuiltinChipDescription(ChipType.Rom_19683x9,
+				new Vector2(GridSize * 16, SubChipInstance.MinChipHeightForPins(inputs, outputs)),
+				new Color(0.25f, 0.35f, 0.5f), inputs, outputs);
 		}
 
 		static ChipDescription CreateNot()
@@ -108,8 +152,8 @@ namespace DLS.Game
 
 			PinDescription[] inputPins =
 			{
-				CreatePinDescription("PITCH", 1, PinBitCount.Bit8),
-				CreatePinDescription("VOLUME", 0, PinBitCount.Bit4),
+				CreatePinDescription("PITCH", 1, PinTritCount.Trit9),
+				CreatePinDescription("VOLUME", 0, PinTritCount.Trit3),
 			};
 
 			float height = SubChipInstance.MinChipHeightForPins(inputPins, null);
@@ -124,13 +168,13 @@ namespace DLS.Game
 
 			PinDescription[] inputPins =
 			{
-				CreatePinDescription("ADDRESS", 0, PinBitCount.Bit8),
-				CreatePinDescription("DATA", 1, PinBitCount.Bit8),
+				CreatePinDescription("ADDRESS", 0, PinTritCount.Trit9),
+				CreatePinDescription("DATA", 1, PinTritCount.Trit9),
 				CreatePinDescription("WRITE", 2),
 				CreatePinDescription("RESET", 3),
 				CreatePinDescription("CLOCK", 4)
 			};
-			PinDescription[] outputPins = { CreatePinDescription("OUT", 5, PinBitCount.Bit8) };
+			PinDescription[] outputPins = { CreatePinDescription("OUT", 5, PinTritCount.Trit9) };
 			Vector2 size = new(GridSize * 10, SubChipInstance.MinChipHeightForPins(inputPins, outputPins));
 
 			return CreateBuiltinChipDescription(ChipType.dev_Ram_8Bit, size, col, inputPins, outputPins);
@@ -140,12 +184,12 @@ namespace DLS.Game
 		{
 			PinDescription[] inputPins =
 			{
-				CreatePinDescription("ADDRESS", 0, PinBitCount.Bit8)
+				CreatePinDescription("ADDRESS", 0, PinTritCount.Trit9)
 			};
 			PinDescription[] outputPins =
 			{
-				CreatePinDescription("OUT B", 1, PinBitCount.Bit8),
-				CreatePinDescription("OUT A", 2, PinBitCount.Bit8)
+				CreatePinDescription("OUT B", 1, PinTritCount.Trit9),
+				CreatePinDescription("OUT A", 2, PinTritCount.Trit9)
 			};
 
 			Color col = new(0.25f, 0.35f, 0.5f);
@@ -195,7 +239,7 @@ namespace DLS.Game
 			return CreateBuiltinChipDescription(ChipType.Pulse, size, col, inputPins, outputPins);
 		}
 
-		static ChipDescription CreateBitConversionChip(ChipType chipType, PinBitCount bitCountIn, PinBitCount bitCountOut, int numIn, int numOut)
+		static ChipDescription CreateBitConversionChip(ChipType chipType, PinTritCount bitCountIn, PinTritCount bitCountOut, int numIn, int numOut)
 		{
 			PinDescription[] inputPins = new PinDescription[numIn];
 			PinDescription[] outputPins = new PinDescription[numOut];
@@ -267,10 +311,10 @@ namespace DLS.Game
 
 			PinDescription[] inputPins =
 			{
-				CreatePinDescription("ADDRESS", 0, PinBitCount.Bit8),
-				CreatePinDescription("RED", 1, PinBitCount.Bit4),
-				CreatePinDescription("GREEN", 2, PinBitCount.Bit4),
-				CreatePinDescription("BLUE", 3, PinBitCount.Bit4),
+				CreatePinDescription("ADDRESS", 0, PinTritCount.Trit9),
+				CreatePinDescription("RED", 1, PinTritCount.Trit3),
+				CreatePinDescription("GREEN", 2, PinTritCount.Trit3),
+				CreatePinDescription("BLUE", 3, PinTritCount.Trit3),
 				CreatePinDescription("RESET", 4),
 				CreatePinDescription("WRITE", 5),
 				CreatePinDescription("REFRESH", 6),
@@ -279,9 +323,9 @@ namespace DLS.Game
 
 			PinDescription[] outputPins =
 			{
-				CreatePinDescription("R OUT", 8, PinBitCount.Bit4),
-				CreatePinDescription("G OUT", 9, PinBitCount.Bit4),
-				CreatePinDescription("B OUT", 10, PinBitCount.Bit4)
+				CreatePinDescription("R OUT", 8, PinTritCount.Trit3),
+				CreatePinDescription("G OUT", 9, PinTritCount.Trit3),
+				CreatePinDescription("B OUT", 10, PinTritCount.Trit3)
 			};
 
 			DisplayDescription[] displays =
@@ -301,7 +345,7 @@ namespace DLS.Game
 		{
 			PinDescription[] inputPins =
 			{
-				CreatePinDescription("ADDRESS", 0, PinBitCount.Bit8),
+				CreatePinDescription("ADDRESS", 0, PinTritCount.Trit9),
 				CreatePinDescription("PIXEL IN", 1),
 				CreatePinDescription("RESET", 2),
 				CreatePinDescription("WRITE", 3),
@@ -338,7 +382,7 @@ namespace DLS.Game
 		// (Not a chip, but convenient to treat it as one)
 		public static ChipDescription CreateInputOrOutputPin(ChipType type)
 		{
-			(bool isInput, bool isOutput, PinBitCount numBits) = ChipTypeHelper.IsInputOrOutputPin(type);
+			(bool isInput, bool isOutput, PinTritCount numBits) = ChipTypeHelper.IsInputOrOutputPin(type);
 			string name = isInput ? "IN" : "OUT";
 			PinDescription[] pin = { CreatePinDescription(name, 0, numBits) };
 
@@ -348,25 +392,25 @@ namespace DLS.Game
 			return CreateBuiltinChipDescription(type, Vector2.zero, Color.clear, inputs, outputs);
 		}
 
-		static Vector2 BusChipSize(PinBitCount bitCount)
+		static Vector2 BusChipSize(PinTritCount bitCount)
 		{
 			return bitCount switch
 			{
-				PinBitCount.Bit1 => new Vector2(GridSize * 2, GridSize * 2),
-				PinBitCount.Bit4 => new Vector2(GridSize * 2, GridSize * 3),
-				PinBitCount.Bit8 => new Vector2(GridSize * 2, GridSize * 4),
-				_ => throw new Exception("Bus bit count not implemented")
+				PinTritCount.Trit1 => new Vector2(GridSize * 2, GridSize * 2),
+				PinTritCount.Trit3 => new Vector2(GridSize * 2, GridSize * 3),
+				PinTritCount.Trit9 => new Vector2(GridSize * 2, GridSize * 4),
+				_ => throw new Exception("Bus trit count not implemented")
 			};
 		}
 
-		static ChipDescription CreateBus(PinBitCount bitCount)
+		static ChipDescription CreateBus(PinTritCount bitCount)
 		{
 			ChipType type = bitCount switch
 			{
-				PinBitCount.Bit1 => ChipType.Bus_1Bit,
-				PinBitCount.Bit4 => ChipType.Bus_4Bit,
-				PinBitCount.Bit8 => ChipType.Bus_8Bit,
-				_ => throw new Exception("Bus bit count not implemented")
+				PinTritCount.Trit1 => ChipType.Bus_1Trit,
+				PinTritCount.Trit3 => ChipType.Bus_3Trit,
+				PinTritCount.Trit9 => ChipType.Bus_9Trit,
+				_ => throw new Exception("Bus trit count not implemented")
 			};
 
 			string name = ChipTypeHelper.GetName(type);
@@ -408,14 +452,14 @@ namespace DLS.Game
 		}
 
 
-		static ChipDescription CreateBusTerminus(PinBitCount bitCount)
+		static ChipDescription CreateBusTerminus(PinTritCount bitCount)
 		{
 			ChipType type = bitCount switch
 			{
-				PinBitCount.Bit1 => ChipType.BusTerminus_1Bit,
-				PinBitCount.Bit4 => ChipType.BusTerminus_4Bit,
-				PinBitCount.Bit8 => ChipType.BusTerminus_8Bit,
-				_ => throw new Exception("Bus bit count not implemented")
+				PinTritCount.Trit1 => ChipType.BusTerminus_1Trit,
+				PinTritCount.Trit3 => ChipType.BusTerminus_3Trit,
+				PinTritCount.Trit9 => ChipType.BusTerminus_9Trit,
+				_ => throw new Exception("Bus trit count not implemented")
 			};
 
 			ChipDescription busOrigin = CreateBus(bitCount);
@@ -445,7 +489,7 @@ namespace DLS.Game
 			};
 		}
 
-		static PinDescription CreatePinDescription(string name, int id, PinBitCount bitCount = PinBitCount.Bit1) =>
+		static PinDescription CreatePinDescription(string name, int id, PinTritCount bitCount = PinTritCount.Trit1) =>
 			new(
 				name,
 				id,

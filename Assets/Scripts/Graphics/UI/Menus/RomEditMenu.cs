@@ -1,6 +1,9 @@
 using System;
 using System.Text;
 using DLS.Game;
+using DLS.Description;
+using DLS.Simulation;
+using System.Globalization;
 using Seb.Helpers;
 using Seb.Types;
 using Seb.Vis;
@@ -9,6 +12,78 @@ using UnityEngine;
 
 namespace DLS.Graphics
 {
+	// ROM-editor input adapter. Display mappings remain owned by PinState.
+	public static class TernaryRomText
+	{
+		public enum Mode { Ternary, Decimal, Nonary, Hept }
+
+		public static string Format(uint word, Mode mode)
+		{
+			if (mode == Mode.Decimal) return PinState.GetTernaryDecimalValue(word, 9).ToString(CultureInfo.InvariantCulture);
+			char[] buffer = new char[16];
+			int length = mode switch
+			{
+				Mode.Ternary => PinState.FormatTernary(word, 9, buffer),
+				Mode.Nonary => PinState.FormatGrouped(word, 9, 2, buffer),
+				Mode.Hept => PinState.FormatGrouped(word, 9, 3, buffer),
+				_ => throw new ArgumentOutOfRangeException(nameof(mode))
+			};
+			return new string(buffer, 0, length);
+		}
+
+		public static bool TryParse(string text, Mode mode, out uint word)
+		{
+			word = 0;
+			if (string.IsNullOrWhiteSpace(text)) return false;
+			text = text.Trim();
+			int value = 0;
+			if (mode == Mode.Decimal)
+			{
+				if (!int.TryParse(text, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out value)) return false;
+			}
+			else if (mode == Mode.Ternary)
+			{
+				if (text.Length != 9) return false;
+				foreach (char c in text)
+				{
+					if (c != '-' && c != '0' && c != '+') return false;
+					value = value * 3 + (c == '-' ? -1 : c == '+' ? 1 : 0);
+				}
+			}
+			else if (mode == Mode.Nonary)
+			{
+				if (text.Length != 5) return false;
+				for (int i = 0; i < text.Length; i++)
+				{
+					char c = text[i];
+					int digit;
+					if (c >= 'a' && c <= 'd') digit = -(c - 'a' + 1);
+					else if (c >= '0' && c <= '4') digit = c - '0';
+					else return false;
+					if (i == 0 && (digit < -1 || digit > 1)) return false; // Only one high trit.
+					value = value * 9 + digit;
+				}
+			}
+			else if (mode == Mode.Hept)
+			{
+				string[] tokens = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+				if (tokens.Length != 3) return false;
+				foreach (string token in tokens)
+				{
+					int digit;
+					if (token.Length == 1 && token[0] >= 'a' && token[0] <= 'm') digit = -(token[0] - 'a' + 1);
+					else if (!int.TryParse(token, NumberStyles.None, CultureInfo.InvariantCulture, out digit) ||
+						digit > 13 || token != digit.ToString(CultureInfo.InvariantCulture)) return false;
+					value = value * 27 + digit;
+				}
+			}
+			else return false;
+			if (value < -9841 || value > 9841) return false;
+			word = PinState.FromDecimal9(value);
+			return true;
+		}
+	}
+
 	public static class RomEditMenu
 	{
 		static int ActiveRomDataBitCount;
@@ -21,6 +96,9 @@ namespace DLS.Graphics
 		static string[] rowNumberStrings;
 
 		static SubChipInstance romChip;
+		static bool IsTernaryRom => romChip?.ChipType == ChipType.Rom_19683x9;
+		static readonly string[] TernaryDisplayOptions = { "TERNARY", "DECIMAL", "NONARY", "HEPT" };
+		static string inputError = string.Empty;
 
 
 		static readonly string[] DataDisplayOptions =
@@ -83,7 +161,7 @@ namespace DLS.Graphics
 				const float buttonSpacing = 0.75f;
 
 				// Display mode
-				DataDisplayMode modeNew = (DataDisplayMode)UI.WheelSelector(ID_DataDisplayMode, DataDisplayOptions, sidePanelTopLeft, new Vector2(sidePanelSize.x, DrawSettings.SelectorWheelHeight), MenuHelper.Theme.OptionsWheel, Anchor.TopLeft);
+				DataDisplayMode modeNew = (DataDisplayMode)UI.WheelSelector(ID_DataDisplayMode, IsTernaryRom ? TernaryDisplayOptions : DataDisplayOptions, sidePanelTopLeft, new Vector2(sidePanelSize.x, DrawSettings.SelectorWheelHeight), MenuHelper.Theme.OptionsWheel, Anchor.TopLeft);
 				Vector2 buttonTopleft = new(sidePanelTopLeft.x, UI.PrevBounds.Bottom - buttonSpacing);
 
 				int copyPasteButtonIndex = MenuHelper.DrawButtonPair("COPY ALL", "PASTE ALL", buttonTopleft, sidePanelSize.x, false);
@@ -92,6 +170,9 @@ namespace DLS.Graphics
 				buttonTopleft = UI.PrevBounds.BottomLeft + Vector2.down * (buttonSpacing * 2f);
 				MenuHelper.CancelConfirmResult result = MenuHelper.DrawCancelConfirmButtons(buttonTopleft, sidePanelSize.x, false, false);
 
+				if (IsTernaryRom && inputError.Length > 0)
+					UI.DrawText(inputError, MenuHelper.Theme.FontBold, MenuHelper.Theme.FontSizeRegular,
+						UI.PrevBounds.BottomLeft + Vector2.down, Anchor.TopLeft, ThemePalette.Parse(ThemeManager.ActivePalette.TextPrimary));
 				MenuHelper.DrawReservedMenuPanel(sidePanelID, UI.GetCurrentBoundsScope());
 
 				// ---- Handle button inputs ----
@@ -105,14 +186,13 @@ namespace DLS.Graphics
 				}
 				else if (result == MenuHelper.CancelConfirmResult.Confirm)
 				{
-					SaveChangesToROM();
-					UIDrawer.SetActiveMenu(UIDrawer.MenuType.None);
+					if (SaveChangesToROM()) UIDrawer.SetActiveMenu(UIDrawer.MenuType.None);
 				}
 
 				if (dataDisplayMode != modeNew)
 				{
-					ConvertDisplayData(dataDisplayMode, modeNew);
-					dataDisplayMode = modeNew;
+					if (ConvertDisplayData(dataDisplayMode, modeNew)) dataDisplayMode = modeNew;
+					else UI.GetWheelSelectorState(ID_DataDisplayMode).index = (int)dataDisplayMode;
 				}
 			}
 		}
@@ -127,6 +207,8 @@ namespace DLS.Graphics
 
 		static string AutoFormatInputString(string input)
 		{
+			if (IsTernaryRom) return TernaryRomText.TryParse(input, (TernaryRomText.Mode)dataDisplayMode, out uint word)
+				? TernaryRomText.Format(word, (TernaryRomText.Mode)dataDisplayMode) : input;
 			// Try to parse string in current format
 			if (!TryParseDisplayStringToUInt(input, dataDisplayMode, ActiveRomDataBitCount, out uint uintValue))
 			{
@@ -160,6 +242,13 @@ namespace DLS.Graphics
 		static void PasteAll()
 		{
 			string[] pasteStrings = StringHelper.SplitByLine(InputHelper.GetClipboardContents());
+			if (IsTernaryRom)
+			{
+				for (int i = 0; i < Math.Min(IDS_inputRow.Length, pasteStrings.Length); i++)
+					if (!TernaryRomText.TryParse(pasteStrings[i], (TernaryRomText.Mode)dataDisplayMode, out _))
+					{ inputError = "Invalid paste at address " + (i - 9841); return; }
+				inputError = string.Empty;
+			}
 			for (int i = 0; i < Mathf.Min(IDS_inputRow.Length, pasteStrings.Length); i++)
 			{
 				string pasteString = AutoFormatInputString(pasteStrings[i]);
@@ -173,22 +262,38 @@ namespace DLS.Graphics
 			for (int i = 0; i < IDS_inputRow.Length; i++)
 			{
 				InputFieldState state = UI.GetInputFieldState(IDS_inputRow[i]);
-				state.SetText("0", state.focused);
+				state.SetText(IsTernaryRom ? TernaryRomText.Format(PinState.FromDecimal9(0), (TernaryRomText.Mode)dataDisplayMode) : "0", state.focused);
 			}
 		}
 
-		static void ConvertDisplayData(DataDisplayMode modeCurr, DataDisplayMode modeNew)
+		static bool ConvertDisplayData(DataDisplayMode modeCurr, DataDisplayMode modeNew)
 		{
+			if (IsTernaryRom)
+			{
+				if (!TryReadTernaryRows(out uint[] words)) return false;
+				for (int i = 0; i < words.Length; i++)
+					UI.GetInputFieldState(IDS_inputRow[i]).SetText(TernaryRomText.Format(words[i], (TernaryRomText.Mode)modeNew), false);
+				return true;
+			}
 			for (int i = 0; i < IDS_inputRow.Length; i++)
 			{
 				InputFieldState state = UI.GetInputFieldState(IDS_inputRow[i]);
 				TryParseDisplayStringToUInt(state.text, modeCurr, ActiveRomDataBitCount, out uint uintValue);
 				state.SetText(UIntToDisplayString(uintValue, modeNew, ActiveRomDataBitCount), false);
 			}
+			return true;
 		}
 
 		static bool ValidateInputString(string text)
 		{
+			if (IsTernaryRom)
+			{
+				// Permit partial edits; complete words are validated before conversion/save.
+				if (text.Length > 32) return false;
+				foreach (char c in text)
+					if (!(c is '+' or '-' or ' ' || c >= '0' && c <= '9' || c >= 'a' && c <= 'm')) return false;
+				return true;
+			}
 			if (string.IsNullOrEmpty(text)) return true;
 			if (text.Length > 34) return false;
 
@@ -210,6 +315,7 @@ namespace DLS.Graphics
 		// Convert from uint to display string with given display mode
 		static string UIntToDisplayString(uint raw, DataDisplayMode displayFormat, int bitCount)
 		{
+			if (IsTernaryRom) return TernaryRomText.Format(raw, (TernaryRomText.Mode)displayFormat);
 			return displayFormat switch
 			{
 				DataDisplayMode.Binary => Convert.ToString(raw, 2).PadLeft(bitCount, '0'),
@@ -262,6 +368,10 @@ namespace DLS.Graphics
 
 		static bool TryParseDisplayStringToUInt(string displayString, DataDisplayMode stringFormat, int bitCount, out uint raw)
 		{
+			if (IsTernaryRom)
+			{
+				return TernaryRomText.TryParse(displayString, (TernaryRomText.Mode)stringFormat, out raw);
+			}
 			try
 			{
 				raw = DisplayStringToUInt(displayString, stringFormat, bitCount);
@@ -284,8 +394,25 @@ namespace DLS.Graphics
 			}
 		}
 
-		static void SaveChangesToROM()
+		static bool TryReadTernaryRows(out uint[] words)
 		{
+			words = new uint[RowCount];
+			for (int i = 0; i < RowCount; i++)
+				if (!TernaryRomText.TryParse(UI.GetInputFieldState(IDS_inputRow[i]).text, (TernaryRomText.Mode)dataDisplayMode, out words[i]))
+				{ inputError = "Invalid value at address " + (i - 9841); return false; }
+			inputError = string.Empty;
+			return true;
+		}
+
+		static bool SaveChangesToROM()
+		{
+			if (IsTernaryRom)
+			{
+				if (!TryReadTernaryRows(out uint[] words)) return false;
+				Array.Copy(words, romChip.InternalData, words.Length);
+				Project.ActiveProject.NotifyRomContentsEdited(romChip);
+				return true;
+			}
 			for (int i = 0; i < RowCount; i++)
 			{
 				string displayString = UI.GetInputFieldState(IDS_inputRow[i]).text;
@@ -294,6 +421,7 @@ namespace DLS.Graphics
 			}
 
 			Project.ActiveProject.NotifyRomContentsEdited(romChip);
+			return true;
 		}
 
 		static void DrawScrollEntry(Vector2 topLeft, float width, int index, bool isLayoutPass)
@@ -326,7 +454,7 @@ namespace DLS.Graphics
 				inputTheme.focusBorderCol = Color.clear;
 
 
-				UI.InputField(inputFieldID, inputTheme, topLeft, panelSize, "0", Anchor.TopLeft, 5, inputStringValidator);
+				UI.InputField(inputFieldID, inputTheme, topLeft, panelSize, "0", Anchor.TopLeft, IsTernaryRom ? 16 : 5, inputStringValidator);
 
 				// Draw line index
 				Color lineNumCol = inputFieldState.focused ? ThemePalette.Parse(ThemeManager.ActivePalette.AccentHover) : ThemePalette.Parse(ThemeManager.ActivePalette.TextDisabled);
@@ -350,6 +478,7 @@ namespace DLS.Graphics
 			focusedRowIndex = 0;
 			IDS_inputRow = new UIHandle[RowCount];
 			rowNumberStrings = new string[RowCount];
+			inputError = string.Empty;
 			dataDisplayMode = (DataDisplayMode)UI.GetWheelSelectorState(ID_DataDisplayMode).index;
 
 			int lineNumberPadLength = RowCount.ToString().Length;
@@ -362,7 +491,7 @@ namespace DLS.Graphics
 				string displayString = UIntToDisplayString(romChip.InternalData[i], dataDisplayMode, ActiveRomDataBitCount);
 				state.SetText(displayString, i == focusedRowIndex);
 
-				rowNumberStrings[i] = (i + ":").PadLeft(lineNumberPadLength + 1, '0');
+				rowNumberStrings[i] = IsTernaryRom ? (i - 9841).ToString(CultureInfo.InvariantCulture) + ":" : (i + ":").PadLeft(lineNumberPadLength + 1, '0');
 			}
 		}
 
@@ -378,5 +507,6 @@ namespace DLS.Graphics
 			Binary,
 			HEX
 		}
+
 	}
 }

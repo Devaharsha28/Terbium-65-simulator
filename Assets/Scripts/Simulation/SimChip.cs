@@ -55,7 +55,11 @@ namespace DLS.Simulation
 			// ---- Initialize internal state ----
 			const int addressSize_8Bit = 256;
 
-			if (ChipType is ChipType.DisplayRGB)
+			if (ChipType == ChipType.Rom_19683x9)
+			{
+				InternalState = PinState.CreateRom9Data(internalState);
+			}
+			else if (ChipType is ChipType.DisplayRGB)
 			{
 				// first 256 bits = display buffer, next 256 bits = back buffer, last bit = clock state (to allow edge-trigger behaviour)
 				InternalState = new uint[addressSize_8Bit * 2 + 1];
@@ -270,7 +274,7 @@ namespace DLS.Simulation
 					removeTargetPin.numInputConnections -= 1;
 					if (removeTargetPin.numInputConnections == 0)
 					{
-						PinState.SetTritDisconnected(ref removeTargetPin.State);
+						PinState.SetAllDisconnected(ref removeTargetPin.State);
 						removeTargetPin.latestSourceID = -1;
 						removeTargetPin.latestSourceParentChipID = -1;
 						if (targetChip != null) removeTargetPin.parentChip.numConnectedInputs--;
