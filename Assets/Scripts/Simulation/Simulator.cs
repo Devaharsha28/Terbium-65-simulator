@@ -214,7 +214,6 @@ namespace DLS.Simulation
 		{
 			SimKeyboardHelper.RefreshInputState();
 		}
-
 		public static bool RandomBool()
 		{
 			pcg_rngState = pcg_rngState * 747796405 + 2891336453;
@@ -253,8 +252,8 @@ namespace DLS.Simulation
 				ChipType.Cons => a == b ? a : 0,
 				ChipType.NCons => a == b ? -a : 0,
 				// The supplied ANY table equals MAX; keep distinct component IDs.
-				ChipType.Any => Math.Max(a, b),
-				ChipType.NAny => -Math.Max(a, b),
+				ChipType.Any => Math.Max(-1, Math.Min(1, sum)),
+				ChipType.NAny => -Math.Max(-1, Math.Min(1, sum)),
 				ChipType.Mul => a * b,
 				ChipType.NMul => -a * b,
 				ChipType.Sum => wrappedSum,
