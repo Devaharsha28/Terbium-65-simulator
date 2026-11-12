@@ -1,0 +1,157 @@
+{
+ "ProjectName": "test3",
+ "DLSVersion_LastSaved": "2.1.6",
+ "DLSVersion_EarliestCompatible": "2.0.0",
+ "CreationTime": "2026-11-08T00:00:00.000+00:00",
+ "LastSaveTime": "2026-11-08T00:00:00.000+00:00",
+ "Prefs_MainPinNamesDisplayMode": 1,
+ "Prefs_ChipPinNamesDisplayMode": 1,
+ "Prefs_GridDisplayMode": 1,
+ "Prefs_Snapping": 0,
+ "Prefs_StraightWires": 0,
+ "Prefs_SimPaused": false,
+ "Prefs_SimTargetStepsPerSecond": 1000,
+ "Prefs_SimStepsPerClockTick": 250,
+ "AllCustomChipNames": [
+  "MUX-27"
+ ],
+ "StarredList": [
+  {
+   "Name": "IN/OUT",
+   "IsCollection": true
+  },
+  {
+   "Name": "MUX-27",
+   "IsCollection": false
+  }
+ ],
+ "ChipCollections": [
+  {
+   "Chips": [
+    "NOT",
+    "MIN",
+    "MAX",
+    "CLOCK",
+    "PULSE",
+    "KEY",
+    "3-STATE BUFFER"
+   ],
+   "IsToggledOpen": false,
+   "Name": "BASIC"
+  },
+  {
+   "Chips": [
+    "NOT",
+    "BUF",
+    "PNOT",
+    "NNOT",
+    "ABS",
+    "CLU",
+    "CLD",
+    "INC",
+    "DEC",
+    "RTU",
+    "RTD",
+    "ISP",
+    "ISZ",
+    "ISN"
+   ],
+   "IsToggledOpen": false,
+   "Name": "UNARY"
+  },
+  {
+   "Chips": [
+    "MIN",
+    "MAX",
+    "NAND",
+    "AND",
+    "OR",
+    "NOR",
+    "CONS",
+    "NCONS",
+    "ANY",
+    "NANY",
+    "MUL",
+    "NMUL",
+    "SUM",
+    "NSUM"
+   ],
+   "IsToggledOpen": false,
+   "Name": "BINARY"
+  },
+  {
+   "Chips": [
+    "-1",
+    "0",
+    "+1"
+   ],
+   "IsToggledOpen": false,
+   "Name": "CONSTANTS"
+  },
+  {
+   "Chips": [
+    "ROM 19683x9",
+    "MEM 1TRIT"
+   ],
+   "IsToggledOpen": false,
+   "Name": "MEMORY"
+  },
+  {
+   "Chips": [
+    "IN-1",
+    "IN-3",
+    "IN-9",
+    "OUT-1",
+    "OUT-3",
+    "OUT-9"
+   ],
+   "IsToggledOpen": false,
+   "Name": "IN/OUT"
+  },
+  {
+   "Chips": [
+    "1-3TRIT",
+    "1-9TRIT",
+    "3-9TRIT",
+    "3-1TRIT",
+    "9-3TRIT",
+    "9-1TRIT"
+   ],
+   "IsToggledOpen": false,
+   "Name": "MERGE/SPLIT"
+  },
+  {
+   "Chips": [
+    "BUS-1",
+    "BUS-3",
+    "BUS-9"
+   ],
+   "IsToggledOpen": false,
+   "Name": "BUS"
+  },
+  {
+   "Chips": [
+    "7-SEGMENT",
+    "DOT DISPLAY",
+    "RGB DISPLAY",
+    "LED"
+   ],
+   "IsToggledOpen": false,
+   "Name": "LEGACY DISPLAY"
+  },
+  {
+   "Chips": [
+    "ROM 256\u00d716"
+   ],
+   "IsToggledOpen": false,
+   "Name": "LEGACY MEMORY"
+  },
+  {
+   "Chips": [
+    "BUZZER"
+   ],
+   "IsToggledOpen": false,
+   "Name": "LEGACY OTHER"
+  }
+ ]
+}

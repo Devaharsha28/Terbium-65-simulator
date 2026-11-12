@@ -1,0 +1,368 @@
+{
+  "records": [
+    {
+      "scene": "Slide01Title",
+      "time": 4.3,
+      "image": "Slide01Title_00.png"
+    },
+    {
+      "scene": "Slide01Title",
+      "time": 5.1,
+      "image": "Slide01Title_01.png"
+    },
+    {
+      "scene": "Slide01Title",
+      "duration": 22.0
+    },
+    {
+      "scene": "Slide02TernaryRecap",
+      "time": 7.6,
+      "image": "Slide02TernaryRecap_00.png"
+    },
+    {
+      "scene": "Slide02TernaryRecap",
+      "time": 13.2,
+      "image": "Slide02TernaryRecap_01.png"
+    },
+    {
+      "scene": "Slide02TernaryRecap",
+      "time": 18.0,
+      "image": "Slide02TernaryRecap_02.png"
+    },
+    {
+      "scene": "Slide02TernaryRecap",
+      "time": 18.8,
+      "image": "Slide02TernaryRecap_03.png"
+    },
+    {
+      "scene": "Slide02TernaryRecap",
+      "duration": 38.0
+    },
+    {
+      "scene": "Slide03ProposalToImplementation",
+      "time": 8.0,
+      "image": "Slide03ProposalToImplementation_00.png"
+    },
+    {
+      "scene": "Slide03ProposalToImplementation",
+      "time": 14.8,
+      "image": "Slide03ProposalToImplementation_01.png"
+    },
+    {
+      "scene": "Slide03ProposalToImplementation",
+      "time": 17.6,
+      "image": "Slide03ProposalToImplementation_02.png"
+    },
+    {
+      "scene": "Slide03ProposalToImplementation",
+      "time": 18.4,
+      "image": "Slide03ProposalToImplementation_03.png"
+    },
+    {
+      "scene": "Slide03ProposalToImplementation",
+      "duration": 34.0
+    },
+    {
+      "scene": "Slide04Terbium65",
+      "time": 4.4,
+      "image": "Slide04Terbium65_00.png"
+    },
+    {
+      "scene": "Slide04Terbium65",
+      "time": 7.2,
+      "image": "Slide04Terbium65_01.png"
+    },
+    {
+      "scene": "Slide04Terbium65",
+      "time": 10.0,
+      "image": "Slide04Terbium65_02.png"
+    },
+    {
+      "scene": "Slide04Terbium65",
+      "time": 12.8,
+      "image": "Slide04Terbium65_03.png"
+    },
+    {
+      "scene": "Slide04Terbium65",
+      "time": 15.6,
+      "image": "Slide04Terbium65_04.png"
+    },
+    {
+      "scene": "Slide04Terbium65",
+      "time": 18.4,
+      "image": "Slide04Terbium65_05.png"
+    },
+    {
+      "scene": "Slide04Terbium65",
+      "time": 18.4,
+      "image": "Slide04Terbium65_06.png"
+    },
+    {
+      "scene": "Slide04Terbium65",
+      "duration": 36.0
+    },
+    {
+      "scene": "Slide05BuildingTernaryLogic",
+      "time": 5.6,
+      "image": "Slide05BuildingTernaryLogic_00.png"
+    },
+    {
+      "scene": "Slide05BuildingTernaryLogic",
+      "time": 15.4,
+      "image": "Slide05BuildingTernaryLogic_01.png"
+    },
+    {
+      "scene": "Slide05BuildingTernaryLogic",
+      "time": 17.0,
+      "image": "Slide05BuildingTernaryLogic_02.png"
+    },
+    {
+      "scene": "Slide05BuildingTernaryLogic",
+      "duration": 43.0
+    },
+    {
+      "scene": "Slide06PowersOfThree",
+      "time": 5.6,
+      "image": "Slide06PowersOfThree_00.png"
+    },
+    {
+      "scene": "Slide06PowersOfThree",
+      "time": 11.1,
+      "image": "Slide06PowersOfThree_01.png"
+    },
+    {
+      "scene": "Slide06PowersOfThree",
+      "time": 16.6,
+      "image": "Slide06PowersOfThree_02.png"
+    },
+    {
+      "scene": "Slide06PowersOfThree",
+      "time": 20.4,
+      "image": "Slide06PowersOfThree_03.png"
+    },
+    {
+      "scene": "Slide06PowersOfThree",
+      "time": 24.2,
+      "image": "Slide06PowersOfThree_04.png"
+    },
+    {
+      "scene": "Slide06PowersOfThree",
+      "time": 29.8,
+      "image": "Slide06PowersOfThree_05.png"
+    },
+    {
+      "scene": "Slide06PowersOfThree",
+      "time": 32.2,
+      "image": "Slide06PowersOfThree_06.png"
+    },
+    {
+      "scene": "Slide06PowersOfThree",
+      "duration": 49.0
+    },
+    {
+      "scene": "Slide07CobaltMemory",
+      "time": 7.6,
+      "image": "Slide07CobaltMemory_00.png"
+    },
+    {
+      "scene": "Slide07CobaltMemory",
+      "time": 14.4,
+      "image": "Slide07CobaltMemory_01.png"
+    },
+    {
+      "scene": "Slide07CobaltMemory",
+      "time": 18.0,
+      "image": "Slide07CobaltMemory_02.png"
+    },
+    {
+      "scene": "Slide07CobaltMemory",
+      "time": 22.8,
+      "image": "Slide07CobaltMemory_03.png"
+    },
+    {
+      "scene": "Slide07CobaltMemory",
+      "time": 25.4,
+      "image": "Slide07CobaltMemory_04.png"
+    },
+    {
+      "scene": "Slide07CobaltMemory",
+      "time": 27.2,
+      "image": "Slide07CobaltMemory_05.png"
+    },
+    {
+      "scene": "Slide07CobaltMemory",
+      "time": 28.8,
+      "image": "Slide07CobaltMemory_06.png"
+    },
+    {
+      "scene": "Slide07CobaltMemory",
+      "duration": 44.0
+    },
+    {
+      "scene": "Slide08LogicToNeuron",
+      "time": 4.6,
+      "image": "Slide08LogicToNeuron_00.png"
+    },
+    {
+      "scene": "Slide08LogicToNeuron",
+      "time": 6.4,
+      "image": "Slide08LogicToNeuron_01.png"
+    },
+    {
+      "scene": "Slide08LogicToNeuron",
+      "time": 8.2,
+      "image": "Slide08LogicToNeuron_02.png"
+    },
+    {
+      "scene": "Slide08LogicToNeuron",
+      "time": 10.0,
+      "image": "Slide08LogicToNeuron_03.png"
+    },
+    {
+      "scene": "Slide08LogicToNeuron",
+      "time": 14.8,
+      "image": "Slide08LogicToNeuron_04.png"
+    },
+    {
+      "scene": "Slide08LogicToNeuron",
+      "time": 18.6,
+      "image": "Slide08LogicToNeuron_05.png"
+    },
+    {
+      "scene": "Slide08LogicToNeuron",
+      "time": 22.4,
+      "image": "Slide08LogicToNeuron_06.png"
+    },
+    {
+      "scene": "Slide08LogicToNeuron",
+      "time": 27.0,
+      "image": "Slide08LogicToNeuron_07.png"
+    },
+    {
+      "scene": "Slide08LogicToNeuron",
+      "time": 29.4,
+      "image": "Slide08LogicToNeuron_08.png"
+    },
+    {
+      "scene": "Slide08LogicToNeuron",
+      "duration": 46.0
+    },
+    {
+      "scene": "Slide09BuildingTernaryNeuron",
+      "time": 5.4,
+      "image": "Slide09BuildingTernaryNeuron_00.png"
+    },
+    {
+      "scene": "Slide09BuildingTernaryNeuron",
+      "time": 10.2,
+      "image": "Slide09BuildingTernaryNeuron_01.png"
+    },
+    {
+      "scene": "Slide09BuildingTernaryNeuron",
+      "time": 16.8,
+      "image": "Slide09BuildingTernaryNeuron_02.png"
+    },
+    {
+      "scene": "Slide09BuildingTernaryNeuron",
+      "time": 23.2,
+      "image": "Slide09BuildingTernaryNeuron_03.png"
+    },
+    {
+      "scene": "Slide09BuildingTernaryNeuron",
+      "time": 26.0,
+      "image": "Slide09BuildingTernaryNeuron_04.png"
+    },
+    {
+      "scene": "Slide09BuildingTernaryNeuron",
+      "time": 27.6,
+      "image": "Slide09BuildingTernaryNeuron_05.png"
+    },
+    {
+      "scene": "Slide09BuildingTernaryNeuron",
+      "duration": 45.0
+    },
+    {
+      "scene": "Slide10NeuronToNetwork",
+      "time": 3.6,
+      "image": "Slide10NeuronToNetwork_00.png"
+    },
+    {
+      "scene": "Slide10NeuronToNetwork",
+      "time": 10.7,
+      "image": "Slide10NeuronToNetwork_01.png"
+    },
+    {
+      "scene": "Slide10NeuronToNetwork",
+      "time": 19.1,
+      "image": "Slide10NeuronToNetwork_02.png"
+    },
+    {
+      "scene": "Slide10NeuronToNetwork",
+      "time": 20.7,
+      "image": "Slide10NeuronToNetwork_03.png"
+    },
+    {
+      "scene": "Slide10NeuronToNetwork",
+      "duration": 45.0
+    },
+    {
+      "scene": "Slide11Verification",
+      "time": 6.2,
+      "image": "Slide11Verification_00.png"
+    },
+    {
+      "scene": "Slide11Verification",
+      "time": 10.8,
+      "image": "Slide11Verification_01.png"
+    },
+    {
+      "scene": "Slide11Verification",
+      "time": 15.6,
+      "image": "Slide11Verification_02.png"
+    },
+    {
+      "scene": "Slide11Verification",
+      "time": 17.2,
+      "image": "Slide11Verification_03.png"
+    },
+    {
+      "scene": "Slide11Verification",
+      "duration": 40.0
+    },
+    {
+      "scene": "Slide12Conclusion",
+      "time": 5.6,
+      "image": "Slide12Conclusion_00.png"
+    },
+    {
+      "scene": "Slide12Conclusion",
+      "time": 10.4,
+      "image": "Slide12Conclusion_01.png"
+    },
+    {
+      "scene": "Slide12Conclusion",
+      "time": 15.2,
+      "image": "Slide12Conclusion_02.png"
+    },
+    {
+      "scene": "Slide12Conclusion",
+      "time": 18.2,
+      "image": "Slide12Conclusion_03.png"
+    },
+    {
+      "scene": "Slide12Conclusion",
+      "time": 22.6,
+      "image": "Slide12Conclusion_04.png"
+    },
+    {
+      "scene": "Slide12Conclusion",
+      "time": 24.2,
+      "image": "Slide12Conclusion_05.png"
+    },
+    {
+      "scene": "Slide12Conclusion",
+      "duration": 38.0
+    }
+  ],
+  "safe_area_issues": []
+}

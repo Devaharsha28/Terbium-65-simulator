@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rubidium</title>
+<style>
+html,body{margin:0;width:100%;height:100%;background:#080e18;color:#eef1f5;font-family:Segoe UI,sans-serif;overflow:hidden}
+main{height:100%;display:flex;align-items:center;justify-content:center}
+video{width:100%;height:100%;object-fit:contain;background:#080e18}
+nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;transition:opacity .4s}
+button{background:#142032e8;color:#eef1f5;border:1px solid #4a596b;border-radius:5px;padding:9px 14px;cursor:pointer;font:14px Segoe UI,sans-serif}
+button:hover,button:focus-visible{border-color:#60bdec;outline:none}
+.hidden{opacity:0;pointer-events:none}
+#hint{position:fixed;bottom:70px;left:0;right:0;text-align:center;font-size:14px;color:#99a4b2;transition:opacity .4s}
+</style>
+<main><video id="canvas" playsinline preload="auto" aria-label="Rubidium animated presentation"></video></main>
+<div id="hint">← → change scene &nbsp; Space play / pause &nbsp; R replay &nbsp; F fullscreen</div>
+<nav id="controls" aria-label="Presentation controls">
+<button id="previous" aria-label="Previous scene">←</button>
+<button id="play">Play</button><button id="replay">Replay</button>
+<button id="next" aria-label="Next scene">→</button><button id="fullscreen">Fullscreen</button>
+</nav>
+<script>
+const scenes=['Slide01Rubidium','Slide02Trit','Slide03InsideRubidium','Slide04Progress','Slide05HowTerbiumWasMade',
+'Slide06WorkingSimulator','Slide07CircuitsBuilt','Slide08SpecialCircuit','Slide09NeuronMath','Slide10MathToHardware',
+'Slide11OurNeuron','Slide12NeuronToNetwork','Slide13Verification','Slide14NextCobalt','Slide15ThankYou'];
+const v=document.getElementById('canvas'),controls=document.getElementById('controls'),hint=document.getElementById('hint');
+let index=0,timer;
+function load(n,play=true){index=Math.max(0,Math.min(scenes.length-1,n));v.src='media/videos/rubidium/1080p30/'+scenes[index]+'.mp4';if(play)v.play().catch(()=>{});}
+function toggle(){if(v.paused){if(v.ended)v.currentTime=0;v.play().catch(()=>{});}else v.pause();}
+function replay(){v.currentTime=0;v.play().catch(()=>{});}
+async function fullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{}}
+function show(){controls.classList.remove('hidden');hint.classList.remove('hidden');clearTimeout(timer);timer=setTimeout(()=>{controls.classList.add('hidden');hint.classList.add('hidden');},3000);}
+document.getElementById('previous').onclick=()=>load(index-1);
+document.getElementById('next').onclick=()=>load(index+1);
+document.getElementById('play').onclick=toggle;
+document.getElementById('replay').onclick=replay;
+document.getElementById('fullscreen').onclick=fullscreen;
+v.onclick=toggle;
+v.onplay=()=>{document.getElementById('play').textContent='Pause';show();};
+v.onpause=()=>{document.getElementById('play').textContent='Play';};
+// End on the stable last frame. Advance only when the presenter requests it.
+document.addEventListener('keydown',e=>{if(e.target.tagName==='BUTTON'&&(e.key===' '||e.key==='Enter'))return;
+if(['ArrowRight','ArrowLeft',' ','r','R','f','F'].includes(e.key))e.preventDefault();
+if(e.key==='ArrowRight')load(index+1);if(e.key==='ArrowLeft')load(index-1);
+if(e.key===' ')toggle();if(e.key.toLowerCase()==='r')replay();if(e.key.toLowerCase()==='f')fullscreen();show();});
+document.addEventListener('pointermove',show);document.addEventListener('focusin',show);
+load(0,false);show();
+</script>
+</html>

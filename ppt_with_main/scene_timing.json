@@ -1,0 +1,92 @@
+[
+  {
+    "scene": 1,
+    "name": "Slide01Rubidium",
+    "start": 0,
+    "duration": 4.866667
+  },
+  {
+    "scene": 2,
+    "name": "Slide02Trit",
+    "start": 4.867,
+    "duration": 15.0
+  },
+  {
+    "scene": 3,
+    "name": "Slide03InsideRubidium",
+    "start": 19.867,
+    "duration": 5.7
+  },
+  {
+    "scene": 4,
+    "name": "Slide04Progress",
+    "start": 25.567,
+    "duration": 9.066667
+  },
+  {
+    "scene": 5,
+    "name": "Slide05HowTerbiumWasMade",
+    "start": 34.633,
+    "duration": 23.866667
+  },
+  {
+    "scene": 6,
+    "name": "Slide06WorkingSimulator",
+    "start": 58.5,
+    "duration": 14.866667
+  },
+  {
+    "scene": 7,
+    "name": "Slide07CircuitsBuilt",
+    "start": 73.367,
+    "duration": 23.733333
+  },
+  {
+    "scene": 8,
+    "name": "Slide08SpecialCircuit",
+    "start": 97.1,
+    "duration": 7.0
+  },
+  {
+    "scene": 9,
+    "name": "Slide09NeuronMath",
+    "start": 104.1,
+    "duration": 23.6
+  },
+  {
+    "scene": 10,
+    "name": "Slide10MathToHardware",
+    "start": 127.7,
+    "duration": 12.7
+  },
+  {
+    "scene": 11,
+    "name": "Slide11OurNeuron",
+    "start": 140.4,
+    "duration": 29.866667
+  },
+  {
+    "scene": 12,
+    "name": "Slide12NeuronToNetwork",
+    "start": 170.267,
+    "duration": 25.633333
+  },
+  {
+    "scene": 13,
+    "name": "Slide13Verification",
+    "start": 195.9,
+    "duration": 19.9
+  },
+  {
+    "scene": 14,
+    "name": "Slide14NextCobalt",
+    "start": 215.8,
+    "duration": 15.233333
+  },
+  {
+    "scene": 15,
+    "name": "Slide15ThankYou",
+    "start": 231.033,
+    "duration": 5.733333
+  }
+]
