@@ -107,3 +107,59 @@ fullscreen. Each scene stays on its final frame until you advance. Controls hide
 while presenting. Keep this file next to the `media` directory.
 
 You can also play the joined movie directly. The movie has no narration or music.
+
+---
+
+# Cobalt: Defense Presentation (30 Scenes)
+
+Thirty independent Manim CE scenes built for the diploma project defense, with a minimal flat-dark aesthetic, large hall-readable typography, and uncluttered slides matching the reference storyboard from start to end.
+
+- Source script: `cobalt.py`
+- Batch renderer: `render_cobalt.py`
+- Interactive HTML presenter: `presentation_cobalt.html`
+- Output joined movie: `Cobalt.mp4`
+
+## Scene Sequence (30 Scenes)
+
+1. `C01_Chip`: Silicon chip layout (`chip_full.png`) with `RUBIDIUM / Ternary Computing System`
+2. `C02_OurProject`: `Rubidium` with Government Institute of Electronics crest (`gioe_logo.png`), team members, guide, and diploma details
+3. `C03_Binary`: `Binary` with digits `0    1`
+4. `C04_Ternary`: `Ternary` with balanced digits `-1    0    +1`
+5. `C05_Quantum`: `Quantum` with qubit notation `|0⟩`, `|1⟩`, `|ψ⟩`
+6. `C06_Neuromorphic`: `Neuromorphic` with `Brain-based computing` and multi-layer neural network diagram
+7. `C07_Compare`: `Different computing` 2x2 grid (`Binary`, `Ternary`, `Quantum`, `Neuromorphic`)
+8. `C08_TernaryUnits`: `Units of ternary` (`trit`, `tryte`, `9 trits = 1 tryte`)
+9. `C09_CurrentResearch`: `Current research`
+10. `C10_BitNet`: `Microsoft BitNet` (`bitnet.png` and `network_diagram.png` side by side)
+11. `C11_Huawei`: `Huawei` (`huawei.png` with `Ternary logic gate patent / CN119652311A / Filed September 2023`)
+12. `C12_TernaryStartup`: `Tern Computing` (`startup.png` wave logo)
+13. `C13_GDDR7`: `GDDR7` (`nvidia_5090.png` + `memory_makers.png` + `RTX 5090 GPU` + `GDDR7 uses PAM3 signalling: 3 voltage levels`)
+14. `C14_ProjectSplit`: `Our project` with `Terbium` | `Cobalt`
+15. `C15_Terbium`: `Terbium` (`Ternary circuit simulator`)
+16. `C16_TerbiumTools`: `Terbium tools` (`unity_logo.png` + `Unity`, `csharp_logo.png` + `C#`)
+17. `C17_TerbiumInterface`: `Terbium interface` (`terbium_ui.png`)
+18. `C18_Cobalt`: `Cobalt R309B1` (`Ternary CPU`)
+19. `C19_CobaltName`: `Cobalt R309B1: the name` (Heptavintimal, Radix 3, 9 trits, Batch 1 breakdown)
+20. `C20_CobaltSpecs`: `Cobalt in Terbium: specifications` (Harvard architecture, 9 trits, ROM: 19683 x 9, 27 registers, RAM: 27 locations)
+21. `C21_CobaltInTerbium`: `Cobalt in Terbium` (`cobalt_in_terbium.png`)
+22. `C22_CobaltPhysical`: `Cobalt physical` (`cobalt_chip.png` with `Cobalt layout`)
+23. `C23_CobaltISA`: `Cobalt: stripped down (ISA)` (9 instructions table: HLT, ADD, SUB, MIN, MAX, MUL, MOV, LDA, LDB + format `[ opcode (8 bits) | immediate (10 bits) ]`)
+24. `C24_ToolsUsed`: `Tools used` (`Yosys`, `OpenROAD`, `SkyWater 130nm PDK`)
+25. `C25_TechSpecs`: `Cobalt layout: specifications` (40 kHz, 7,840 transistors, 1.8 V, 18-bit instruction, 2 registers, 16-instruction memory, 2 cycles / instruction)
+26. `C26_Limitations`: `Limitations` (No physical chip, No wide software, Heat issues, Noise)
+27. `C27_Credits1`: `Credits` (Sebastian Lague, louis-dr)
+28. `C28_Credits2`: `Credits` (Douglas W. Jones, Setun)
+29. `C29_Questions`: `Questions?`
+30. `C30_ThankYou`: `Thank you`
+
+## Rendering Cobalt
+
+Render all 30 scenes and concatenate to `Cobalt.mp4`:
+```bash
+./.venv_linux/bin/python render_cobalt.py --quality h --fps 30 --concat
+```
+
+Or preview specific scenes:
+```bash
+./.venv_linux/bin/python render_cobalt.py --slides 1 2 3 4 5 --quality l
+```
